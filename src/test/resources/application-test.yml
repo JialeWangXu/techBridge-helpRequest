@@ -22,3 +22,6 @@ eureka:
   instance:
     leaseRenewalIntervalInSeconds: 0
     leaseExpirationDurationInSeconds: 0
+
+feign:
+  enabled: false
