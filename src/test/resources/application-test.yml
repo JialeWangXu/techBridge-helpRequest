@@ -9,6 +9,11 @@ spring:
   datasource:
     driver-class-name: org.h2.Driver
     url: jdbc:h2:mem:testdb
+  security:
+    oauth2:
+      api-client-id: "test-id"
+      api-client-secret: "test-secret"
+      token-uri: "http://localhost:8080/auth/token"
 
 # Desactivar eureka en perfil de test
 eureka:
