@@ -14,10 +14,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@DataJpaTest
+@SpringBootTest
 @ActiveProfiles("test") // Asegúrate de tener un application-test.yml para H2
-@Import(SeederForDev.class)
-public class SupportSessionRepositoryTest {
+class SupportSessionRepositoryTest {
 
     @Autowired
     private SupportSessionRepository supportSessionRepository;

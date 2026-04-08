@@ -13,7 +13,6 @@ import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepo
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
 @Configuration
-@ConditionalOnProperty(name = "feign.enabled", havingValue = "true", matchIfMissing = true)
 public class FeignConfig {
 
 

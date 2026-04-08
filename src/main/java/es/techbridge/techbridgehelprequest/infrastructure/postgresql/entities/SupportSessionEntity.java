@@ -1,5 +1,6 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities;
 
+import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -37,4 +38,25 @@ public class SupportSessionEntity extends BaseAuditEntity{
     @OneToOne
     @JoinColumn(name = "help_request_id")
     private HelpRequestEntity helpRequest;
+
+    public SupportSessionEntity(SupportSession dto){
+        this.sessionMethod = dto.getSessionMethod();
+        this.s3RecordingUrl = dto.getS3RecordingUrl();
+        this.recordingConsent = dto.getRecordingConsent();
+        this.volunteerNotes = dto.getVolunteerNotes();
+        this.status = dto.getStatus();
+    }
+
+    public SupportSession toSupportSession(){
+        // para evitar el bucle, si SupportSession necesita informacion de helprequest,
+        // necesita buscar manualmente.
+        return SupportSession.builder()
+                .id(this.id)
+                .sessionMethod(this.sessionMethod)
+                .s3RecordingUrl(this.s3RecordingUrl)
+                .recordingConsent(this.recordingConsent)
+                .volunteerNotes(this.volunteerNotes)
+                .status(this.status)
+                .build();
+    }
 }

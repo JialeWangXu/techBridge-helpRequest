@@ -1,0 +1,24 @@
+package es.techbridge.techbridgehelprequest.domain.webclients;
+
+import es.techbridge.techbridgehelprequest.configurations.FeignConfig;
+import es.techbridge.techbridgehelprequest.domain.model.UserDto;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.UUID;
+
+@FeignClient(name = UserWebClient.TECHBRIDGE_USER, configuration = FeignConfig.class)
+public interface UserWebClient {
+    String TECHBRIDGE_USER = "techbridge-user";
+    String USERS = "/users";
+    String ID_ID = "/{id}";
+    String EMAIL = "/{email}";
+
+    @GetMapping(USERS+EMAIL)
+    UserDto readByEmail(@PathVariable String email);
+
+    @GetMapping(USERS+ID_ID)
+    UserDto readById(@PathVariable UUID id);
+
+}

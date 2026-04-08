@@ -7,9 +7,3 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
-springdoc:
-  swagger-ui:
-    oauth:
-      client-id: swagger-client
-      client-secret: swagger-secret

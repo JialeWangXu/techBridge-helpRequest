@@ -11,9 +11,16 @@ spring:
     url: jdbc:h2:mem:testdb
   security:
     oauth2:
-      api-client-id: "test-id"
-      api-client-secret: "test-secret"
-      token-uri: "http://localhost:8080/auth/token"
+      client:
+        registration:
+          internal-client:
+            client-id: "test-id"
+            client-secret: "test-secret"
+            provider: "my-provider"
+            authorization-grant-type: client_credentials
+        provider:
+          my-provider:
+            token-uri: http://localhost:8080/api/techbridge-user/oauth2/token
 
 # Desactivar eureka en perfil de test
 eureka:
@@ -22,6 +29,3 @@ eureka:
   instance:
     leaseRenewalIntervalInSeconds: 0
     leaseExpirationDurationInSeconds: 0
-
-feign:
-  enabled: false
