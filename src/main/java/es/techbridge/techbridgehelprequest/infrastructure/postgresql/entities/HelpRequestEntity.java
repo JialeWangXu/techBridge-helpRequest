@@ -1,5 +1,7 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities;
 
+import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -38,4 +40,31 @@ public class HelpRequestEntity extends BaseAuditEntity{
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "helpRequest")
     @ToString.Exclude
     private SupportSessionEntity supportSession;
+
+    public HelpRequestEntity (HelpRequest dto){
+        this.id=dto.getId();
+        this.title =dto.getTitle();
+        this.description=dto.getDescription();
+        this.status=dto.getStatus();
+        this.seniorId=dto.getSenior().getId();
+    }
+
+    public HelpRequest toHelpRequest(){
+
+        SupportSession session =null;
+        if(this.supportSession!=null){
+            session = this.supportSession.toSupportSession();
+        }
+
+        return HelpRequest.builder()
+                .id(this.id)
+                .title(this.title)
+                .description(this.description)
+                .status(this.status)
+                .updatedAt(this.getUpdatedAt())
+                .createdAt(this.getCreatedAt())
+                .supportSession(session)
+                .build();
+    }
+
 }

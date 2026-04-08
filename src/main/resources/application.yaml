@@ -24,6 +24,7 @@ spring:
           internal-client:
             client-id: internal-api-client
             client-secret: internal-secret
+            provider: "internal-provider"
             authorization-grant-type: client_credentials
             scope: profile
         provider:
@@ -31,6 +32,7 @@ spring:
             token-uri: http://localhost:8080/api/techbridge-user/oauth2/token
 server:
   port: 8082
+  forward-headers-strategy: framework
 
 info:
   app:
@@ -55,6 +57,7 @@ logging:
 eureka:
   instance:
     prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
   client:
