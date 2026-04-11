@@ -57,4 +57,13 @@ class HelpRequestServiceIT {
                 .filter(x -> x.getTitle().equals("Test1")).findFirst().get();
         assertThat(result.getTitle()).isEqualTo("Test1");
     }
+
+    @Test
+    void getHelpRequestsByEmail(){
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willAnswer(invocation -> senior);
+        List<HelpRequest> result = this.helpRequestService.getHelpRequestsByEmail(seniorEmail);
+        assertThat(result).isNotNull();
+        assertThat(result.size()).isEqualTo(3);
+    }
 }
