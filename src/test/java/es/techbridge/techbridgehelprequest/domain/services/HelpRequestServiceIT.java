@@ -4,6 +4,7 @@ import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import org.junit.jupiter.api.Test;
@@ -13,9 +14,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
@@ -41,9 +44,7 @@ class HelpRequestServiceIT {
 
     @Test
      void create() {
-        UUID id = UUID.randomUUID();
         HelpRequest helpRequest = HelpRequest.builder()
-                .id(id)
                 .title("Test1")
                 .description("Testing1")
                 .status(RequestStatus.OPEN)
@@ -51,7 +52,9 @@ class HelpRequestServiceIT {
         BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
                 .willAnswer(invocation -> senior);
         this.helpRequestService.create(seniorEmail,helpRequest);
-        assertThat(this.helpRequestRepository.existsById(id)).isTrue();
-        assertThat(this.helpRequestRepository.findById(id).get().getTitle()).isEqualTo("Test1");
+        List<HelpRequestEntity> helpRequestEntities = this.helpRequestRepository.findBySeniorId(senior.getId());
+        HelpRequestEntity result = helpRequestEntities.stream()
+                .filter(x -> x.getTitle().equals("Test1")).findFirst().get();
+        assertThat(result.getTitle()).isEqualTo("Test1");
     }
 }
