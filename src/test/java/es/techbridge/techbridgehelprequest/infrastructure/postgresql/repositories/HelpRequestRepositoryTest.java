@@ -6,7 +6,6 @@ import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.Re
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -49,5 +48,13 @@ class HelpRequestRepositoryTest {
     void shouldFindRequestsBySeniorId() {
         List<HelpRequestEntity> seniorRequests = helpRequestRepository.findBySeniorId(seniorId);
         assertThat(seniorRequests).hasSize(3);
+    }
+
+    @Test
+    void shouldFindRequestById(){
+        Optional<HelpRequestEntity> result = this.helpRequestRepository
+                .findById(UUID.fromString("11111111-2222-3333-4444-555566660001"));
+        assertThat(result).isPresent();
+        assertThat(result.get().getId()).isEqualTo(UUID.fromString("11111111-2222-3333-4444-555566660001"));
     }
 }

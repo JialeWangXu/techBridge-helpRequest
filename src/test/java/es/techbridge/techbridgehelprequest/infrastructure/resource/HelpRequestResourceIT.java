@@ -1,19 +1,14 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import es.techbridge.techbridgehelprequest.domain.services.HelpRequestService;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.resources.HelpRequestResource;
-import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +18,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -87,6 +83,30 @@ class HelpRequestResourceIT {
                         )
                 .andExpect(status().isOk());
         verify(helpRequestService).getHelpRequestsByEmail(seniorEmail);
+    }
+
+    @Test
+    void whenGetHelpRequestById_thenReturnResult() throws Exception{
+        mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.ID,
+                UUID.fromString("11111111-2222-3333-4444-555566660001"))
+                .with(jwt().jwt(j -> j.subject(seniorEmail))
+                        .authorities(()-> "ROLE_SENIOR"))
+                .contentType(MediaType.APPLICATION_JSON)
+            ).andExpect(status().isOk());
+        verify(helpRequestService).getById(UUID.fromString("11111111-2222-3333-4444-555566660001"));
+    }
+
+    @Test
+    void whenDeleteRequestById_thenDeleteRequest() throws Exception{
+
+
+        mockMvc.perform(delete(HelpRequestResource.HELPREQUESTS+HelpRequestResource.ID,
+                UUID.fromString("11111111-2222-3333-4444-555566660004"))
+                .with(jwt().jwt(j -> j.subject(seniorEmail))
+                        .authorities(()-> "ROLE_SENIOR"))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
+        verify(helpRequestService).deleteById(UUID.fromString("11111111-2222-3333-4444-555566660004"));
     }
 
 }

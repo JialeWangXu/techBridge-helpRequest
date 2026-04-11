@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @Log4j2
@@ -18,6 +19,7 @@ import java.util.List;
 public class HelpRequestResource {
 
     public static final String HELPREQUESTS = "/helprequests";
+    public static final String ID = "/{id}";
     private final HelpRequestService helpRequestService;
 
     @Autowired
@@ -37,6 +39,18 @@ public class HelpRequestResource {
     public List<HelpRequest> getHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
         String email = jwt.getSubject();
         return this.helpRequestService.getHelpRequestsByEmail(email);
+    }
+
+    @GetMapping(ID)
+    @PreAuthorize("hasAnyRole('SENIOR','VOLUNTEER')")
+    public HelpRequest getById(@PathVariable UUID id){
+        return this.helpRequestService.getById(id);
+    }
+
+    @DeleteMapping(ID)
+    @PreAuthorize("hasAnyRole('SENIOR')")
+    public void deleteById(@PathVariable UUID id){
+        this.helpRequestService.deleteById(id);
     }
 
 }

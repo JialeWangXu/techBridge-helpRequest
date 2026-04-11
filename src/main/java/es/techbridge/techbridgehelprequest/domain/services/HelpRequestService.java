@@ -7,7 +7,6 @@ import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -41,5 +40,20 @@ public class HelpRequestService {
                 .map(HelpRequestEntity::toHelpRequest)
                 .peek(r -> r.setSenior(senior))
                 .toList();
+    }
+
+    public HelpRequest getById(UUID id){
+        HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
+        if(helpRequest.getVolunteer().getId()!=null){
+            UserDto volunteer = this.userWebClient.readById(helpRequest.getVolunteer().getId());
+            helpRequest.setVolunteer(volunteer);
+        }else{
+            helpRequest.setVolunteer(null);
+        }
+        return helpRequest;
+    }
+
+    public void deleteById(UUID id){
+        this.helpRequestPersistence.deleteById(id);
     }
 }
