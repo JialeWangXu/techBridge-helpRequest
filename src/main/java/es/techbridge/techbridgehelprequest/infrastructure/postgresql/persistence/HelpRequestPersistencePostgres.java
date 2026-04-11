@@ -7,6 +7,7 @@ import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositorie
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -23,6 +24,11 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     public void create(HelpRequest helpRequest) {
         HelpRequestEntity helpRequestEntity = new HelpRequestEntity(helpRequest);
         this.helpRequestRepository.save(helpRequestEntity);
+    }
+
+    @Override
+    public List<HelpRequestEntity> getHelpRequestsBySeniorId(UUID seniorId) {
+        return this.helpRequestRepository.findBySeniorId(seniorId);
     }
 
 }

@@ -8,10 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Log4j2
@@ -31,6 +30,13 @@ public class HelpRequestResource {
     public void create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody HelpRequest helpRequest){
         String email = jwt.getSubject();
         this.helpRequestService.create(email,helpRequest);
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('SENIOR')")
+    public List<HelpRequest> getHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
+        String email = jwt.getSubject();
+        return this.helpRequestService.getHelpRequestsByEmail(email);
     }
 
 }
