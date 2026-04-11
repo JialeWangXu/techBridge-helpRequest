@@ -12,8 +12,8 @@ import java.util.UUID;
 public interface UserWebClient {
     String TECHBRIDGE_USER = "techbridge-user";
     String USERS = "/users";
-    String ID_ID = "/{id}";
-    String EMAIL = "/{email}";
+    String ID_ID = "/id/{id}";
+    String EMAIL = "/email/{email}";
 
     @GetMapping(USERS+EMAIL)
     UserDto readByEmail(@PathVariable String email);

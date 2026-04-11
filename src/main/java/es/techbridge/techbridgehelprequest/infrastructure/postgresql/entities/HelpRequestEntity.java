@@ -2,6 +2,7 @@ package es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities;
 
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -52,12 +53,17 @@ public class HelpRequestEntity extends BaseAuditEntity{
     public HelpRequest toHelpRequest(){
 
         SupportSession session =null;
+        UUID volunteer = null;
+        if(this.volunteerId !=null){
+            volunteer = this.volunteerId;
+        }
         if(this.supportSession!=null){
             session = this.supportSession.toSupportSession();
         }
 
         return HelpRequest.builder()
                 .id(this.id)
+                .volunteer(UserDto.builder().id(volunteer).build())
                 .title(this.title)
                 .description(this.description)
                 .status(this.status)
