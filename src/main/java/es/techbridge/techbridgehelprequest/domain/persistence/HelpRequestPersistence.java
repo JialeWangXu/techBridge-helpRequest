@@ -19,4 +19,6 @@ public interface HelpRequestPersistence {
 
     void deleteById(UUID id);
 
+    List<HelpRequestEntity> getAllAvailableHelpRequests();
+
 }

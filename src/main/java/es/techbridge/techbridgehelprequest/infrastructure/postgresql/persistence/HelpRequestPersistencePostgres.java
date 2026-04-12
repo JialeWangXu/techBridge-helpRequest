@@ -4,12 +4,12 @@ import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -46,6 +46,16 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
             throw  new NotFoundException("No Help request found with the ID: "+id);
         }
         this.helpRequestRepository.deleteById(id);
+    }
+
+    @Override
+    public List<HelpRequestEntity> getAllAvailableHelpRequests() {
+        // Requests generado con tutorial y solicitada ayuda de voluntario
+        List<HelpRequestEntity> availableHelpRequests =
+                this.helpRequestRepository.findAllByStatus(RequestStatus.FINDING_VOLUNTEER);
+        return availableHelpRequests.stream()
+                .filter(helpRequestEntity -> helpRequestEntity.getAiTutorialId()!=null)
+                .toList();
     }
 
 }

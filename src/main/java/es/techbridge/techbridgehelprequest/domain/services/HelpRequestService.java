@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+
 @Service
 public class HelpRequestService {
 
@@ -55,5 +56,16 @@ public class HelpRequestService {
 
     public void deleteById(UUID id){
         this.helpRequestPersistence.deleteById(id);
+    }
+
+    public List<HelpRequest> getAllAvailableHelpRequests(){
+        return this.helpRequestPersistence.getAllAvailableHelpRequests()
+                .stream()
+                .map(HelpRequestEntity::toHelpRequest)
+                .peek(helpRequest ->
+                    helpRequest.setSenior(this.userWebClient.readById(helpRequest.getSenior().getId()))
+                )
+                .toList();
+
     }
 }

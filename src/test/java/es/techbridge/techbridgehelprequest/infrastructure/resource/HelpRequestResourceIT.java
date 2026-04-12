@@ -40,6 +40,7 @@ class HelpRequestResourceIT {
     private UserWebClient userWebClient;
 
     private final String seniorEmail = "manolo@gmail.com";
+    private final String volunteerEmail = "lucia@volunteer.org";
 
     @Test
     void whenCreateHelpRequestAsSenior_thenReturns200() throws Exception {
@@ -98,8 +99,6 @@ class HelpRequestResourceIT {
 
     @Test
     void whenDeleteRequestById_thenDeleteRequest() throws Exception{
-
-
         mockMvc.perform(delete(HelpRequestResource.HELPREQUESTS+HelpRequestResource.ID,
                 UUID.fromString("11111111-2222-3333-4444-555566660004"))
                 .with(jwt().jwt(j -> j.subject(seniorEmail))
@@ -107,6 +106,16 @@ class HelpRequestResourceIT {
                 .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(status().isOk());
         verify(helpRequestService).deleteById(UUID.fromString("11111111-2222-3333-4444-555566660004"));
+    }
+
+    @Test
+    void whenGetAllAvailableHelpRequest() throws Exception{
+        mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.AVAILABLE)
+                .with(jwt().jwt(j -> j.subject(volunteerEmail))
+                        .authorities(()-> "ROLE_VOLUNTEER"))
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk());
+        verify(helpRequestService).getAllAvailableHelpRequests();
     }
 
 }

@@ -20,6 +20,7 @@ public class HelpRequestResource {
 
     public static final String HELPREQUESTS = "/helprequests";
     public static final String ID = "/{id}";
+    public static final String AVAILABLE = "/available";
     private final HelpRequestService helpRequestService;
 
     @Autowired
@@ -51,6 +52,12 @@ public class HelpRequestResource {
     @PreAuthorize("hasAnyRole('SENIOR')")
     public void deleteById(@PathVariable UUID id){
         this.helpRequestService.deleteById(id);
+    }
+
+    @GetMapping(AVAILABLE)
+    @PreAuthorize("hasAnyRole('VOLUNTEER')")
+    public List<HelpRequest> getAllAvailableHelpRequests(){
+        return this.helpRequestService.getAllAvailableHelpRequests();
     }
 
 }
