@@ -110,4 +110,10 @@ class HelpRequestServiceIT {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("11111111-2222-3333-4444-777866660001");
     }
+
+    @Test
+    void getAllAvailableRequests(){
+        List<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests();
+        assertThat(result).hasSize(1);
+    }
 }

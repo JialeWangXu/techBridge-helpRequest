@@ -63,6 +63,7 @@ public class HelpRequestEntity extends BaseAuditEntity{
 
         return HelpRequest.builder()
                 .id(this.id)
+                .senior(UserDto.builder().id(this.seniorId).build())
                 .volunteer(UserDto.builder().id(volunteer).build())
                 .title(this.title)
                 .description(this.description)

@@ -57,4 +57,10 @@ class HelpRequestRepositoryTest {
         assertThat(result).isPresent();
         assertThat(result.get().getId()).isEqualTo(UUID.fromString("11111111-2222-3333-4444-555566660001"));
     }
+
+    @Test
+    void shouldFindAvailableRequests(){
+        List<HelpRequestEntity> result = this.helpRequestRepository.findAllByStatus(RequestStatus.FINDING_VOLUNTEER);
+        assertThat(result).hasSize(1);
+    }
 }

@@ -54,7 +54,8 @@ public class SeederForDev {
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660002"))
                         .title("Problemas con la App del Banco")
                         .description("No consigo acceder a mi cuenta, me da error de credenciales.")
-                        .status(RequestStatus.ACCEPTED)
+                        .status(RequestStatus.FINDING_VOLUNTEER)
+                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660000"))
                         .seniorId(seniorId)
                         .volunteerId(volunteerId) // Ya tiene un voluntario asignado
                         .createdAt(LocalDateTime.now().minusDays(1))
