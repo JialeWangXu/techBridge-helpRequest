@@ -32,16 +32,14 @@ class HelpRequestRepositoryTest {
 
         assertThat(found).isPresent();
         assertThat(found.get().getTitle()).isEqualTo("Configuración de Tablet nueva");
-        assertThat(found.get().getStatus()).isEqualTo(RequestStatus.OPEN);
+        assertThat(found.get().getStatus()).isEqualTo(RequestStatus.FINDING_VOLUNTEER);
     }
 
     @Test
     void shouldFindOpenRequestsFromSeeder() {
         List<HelpRequestEntity> openRequests = helpRequestRepository.findByStatus(RequestStatus.OPEN);
 
-        assertThat(openRequests).isNotEmpty();
-        assertThat(openRequests).extracting(HelpRequestEntity::getTitle)
-                .contains("Configuración de Tablet nueva");
+        assertThat(openRequests).isEmpty();
     }
 
     @Test

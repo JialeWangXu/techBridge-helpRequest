@@ -47,14 +47,15 @@ public class SeederForDev {
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660001"))
                         .title("Configuración de Tablet nueva")
                         .description("Necesito ayuda para instalar WhatsApp y el correo en una Samsung Tab.")
-                        .status(RequestStatus.OPEN)
+                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660001"))
+                        .status(RequestStatus.FINDING_VOLUNTEER)
                         .seniorId(seniorId)
                         .build(),
                 HelpRequestEntity.builder()
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660002"))
                         .title("Problemas con la App del Banco")
                         .description("No consigo acceder a mi cuenta, me da error de credenciales.")
-                        .status(RequestStatus.FINDING_VOLUNTEER)
+                        .status(RequestStatus.IN_PROGRESS)
                         .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660000"))
                         .seniorId(seniorId)
                         .volunteerId(volunteerId) // Ya tiene un voluntario asignado
@@ -64,6 +65,7 @@ public class SeederForDev {
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660003"))
                         .title("Videollamada con familiares")
                         .description("Quiero aprender a usar Zoom para hablar con mis nietos en el extranjero.")
+                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660002"))
                         .status(RequestStatus.COMPLETED)
                         .seniorId(seniorId)
                         .volunteerId(volunteerId)
@@ -78,7 +80,7 @@ public class SeederForDev {
         // Vinculamos las sesiones a las peticiones anteriores mediante la relación 1:1
         SupportSessionEntity[] sessions = {
                 SupportSessionEntity.builder()
-                        .id(UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0001"))
+                        .id(UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0003"))
                         .sessionMethod(SessionMethods.ONLINE_MEETING)
                         .status(HelpStatus.ACTIVE)
                         .recordingConsent(true)
