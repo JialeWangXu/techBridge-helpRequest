@@ -58,4 +58,15 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
                 .toList();
     }
 
+    @Override
+    public HelpRequestEntity updateRequestStatusById(UUID id, RequestStatus requestStatus) {
+        if(!this.helpRequestRepository.existsById(id)){
+            throw new NotFoundException("No Help request found with the ID: "+id);
+        }
+        HelpRequestEntity request = this.helpRequestRepository.findById(id).get();
+        request.setStatus(requestStatus);
+        this.helpRequestRepository.save(request);
+        return request;
+    }
+
 }

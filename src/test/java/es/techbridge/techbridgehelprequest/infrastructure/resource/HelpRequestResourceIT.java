@@ -1,121 +1,220 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.services.HelpRequestService;
+import es.techbridge.techbridgehelprequest.domain.model.UserDto;
+import es.techbridge.techbridgehelprequest.domain.model.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.resources.HelpRequestResource;
 import jakarta.ws.rs.core.MediaType;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
-
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@Transactional
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 class HelpRequestResourceIT {
 
-    @MockitoBean
-    HelpRequestService helpRequestService;
+    private static final UUID SENIOR_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID VOLUNTEER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID REQUEST_ID_FINDING_VOLUNTEER = UUID.fromString("11111111-2222-3333-4444-555566660001");
+    private static final String SENIOR_EMAIL = "manolo@gmail.com";
+    private static final String VOLUNTEER_EMAIL = "lucia@volunteer.org";
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private HelpRequestRepository helpRequestRepository;
+
+    @Autowired
+    private SupportSessionRepository supportSessionRepository;
+
     @MockitoBean
     private UserWebClient userWebClient;
 
-    private final String seniorEmail = "manolo@gmail.com";
-    private final String volunteerEmail = "lucia@volunteer.org";
+    @BeforeEach
+    void setUp() {
+        UserDto senior = UserDto.builder()
+                .id(SENIOR_ID)
+                .firstName("Manolo")
+                .lastName("Garcia")
+                .email(SENIOR_EMAIL)
+                .role(UserRole.SENIOR)
+                .build();
+        UserDto volunteer = UserDto.builder()
+                .id(VOLUNTEER_ID)
+                .firstName("Lucia")
+                .lastName("Lopez")
+                .email(VOLUNTEER_EMAIL)
+                .role(UserRole.VOLUNTEER)
+                .build();
+
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(senior);
+        BDDMockito.given(this.userWebClient.readById(any(UUID.class)))
+                .willAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    if (VOLUNTEER_ID.equals(id)) {
+                        return volunteer;
+                    }
+                    return senior;
+                });
+    }
 
     @Test
     void whenCreateHelpRequestAsSenior_thenReturns200() throws Exception {
-        // Datos de prueba basados en tu esquema Swagger
         String jsonBody = """
             {
               "title": "Ayuda con WhatsApp",
               "description": "No puedo enviar fotos a mis nietos",
-              "status":"OPEN"
+              "status": "OPEN"
             }
             """;
 
-        mockMvc.perform(post(HelpRequestResource.HELPREQUESTS)
-                        .with(jwt().jwt(j -> j.subject(seniorEmail))
-                                .authorities(() -> "ROLE_SENIOR")) // Simula @PreAuthorize y @AuthenticationPrincipal
+        this.mockMvc.perform(post(HelpRequestResource.HELPREQUESTS)
+                        .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
+                                .authorities(() -> "ROLE_SENIOR"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isOk());
 
-        // Verificamos que se llama al servicio con el email extraído del JWT
-        verify(helpRequestService).create(eq(seniorEmail), any(HelpRequest.class));
+        HelpRequestEntity createdRequest = this.helpRequestRepository.findBySeniorId(SENIOR_ID).stream()
+                .filter(helpRequestEntity -> helpRequestEntity.getTitle().equals("Ayuda con WhatsApp"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(createdRequest.getDescription()).isEqualTo("No puedo enviar fotos a mis nietos");
+        assertThat(createdRequest.getStatus()).isEqualTo(RequestStatus.OPEN);
+        assertThat(createdRequest.getSeniorId()).isEqualTo(SENIOR_ID);
     }
 
     @Test
     void whenCreateHelpRequestWithoutSeniorRole_thenReturns403() throws Exception {
-        String jsonBody = "{\"title\": \"Test\", \"description\": \"Test description\"}";
+        String jsonBody = """
+            {
+              "title": "Request forbidden",
+              "description": "Test description",
+              "status": "OPEN"
+            }
+            """;
 
-        mockMvc.perform(post(HelpRequestResource.HELPREQUESTS)
-                        .with(jwt().authorities(() -> "ROLE_VOLUNTEER")) // Rol no autorizado
+        this.mockMvc.perform(post(HelpRequestResource.HELPREQUESTS)
+                        .with(jwt().authorities(() -> "ROLE_VOLUNTEER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonBody))
                 .andExpect(status().isForbidden());
+
+        assertThat(this.helpRequestRepository.findBySeniorId(SENIOR_ID))
+                .extracting(HelpRequestEntity::getTitle)
+                .doesNotContain("Request forbidden");
     }
 
     @Test
-    void  whenGetHelpRequestByEmail_thenReturnResult() throws Exception {
-        mockMvc.perform(get(HelpRequestResource.HELPREQUESTS)
-                        .with(jwt().jwt(j -> j.subject(seniorEmail))
-                                .authorities(()-> "ROLE_SENIOR"))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        )
+    void whenGetHelpRequestByEmail_thenReturnResult() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS)
+                        .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
+                                .authorities(() -> "ROLE_SENIOR"))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+    }
+
+    @Test
+    void whenGetHelpRequestById_thenReturnResult() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.ID, REQUEST_ID_FINDING_VOLUNTEER)
+                        .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
+                                .authorities(() -> "ROLE_SENIOR"))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()))
+                .andExpect(content().string(containsString("Tablet")))
+                .andExpect(jsonPath("$.status").value("FINDING_VOLUNTEER"))
+                .andExpect(jsonPath("$.senior.email").value(SENIOR_EMAIL));
+    }
+
+    @Test
+    void whenDeleteRequestById_thenDeleteRequest() throws Exception {
+        UUID requestId = UUID.fromString("11111111-2222-3333-4444-555566660004");
+        HelpRequestEntity requestToDelete = HelpRequestEntity.builder()
+                .id(requestId)
+                .title("Delete from resource")
+                .description("Delete from resource")
+                .status(RequestStatus.CANCELLED)
+                .seniorId(SENIOR_ID)
+                .build();
+        this.helpRequestRepository.save(requestToDelete);
+
+        this.mockMvc.perform(delete(HelpRequestResource.HELPREQUESTS + HelpRequestResource.ID, requestId)
+                        .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
+                                .authorities(() -> "ROLE_SENIOR"))
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        verify(helpRequestService).getHelpRequestsByEmail(seniorEmail);
+
+        assertThat(this.helpRequestRepository.existsById(requestId)).isFalse();
     }
 
     @Test
-    void whenGetHelpRequestById_thenReturnResult() throws Exception{
-        mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.ID,
-                UUID.fromString("11111111-2222-3333-4444-555566660001"))
-                .with(jwt().jwt(j -> j.subject(seniorEmail))
-                        .authorities(()-> "ROLE_SENIOR"))
-                .contentType(MediaType.APPLICATION_JSON)
-            ).andExpect(status().isOk());
-        verify(helpRequestService).getById(UUID.fromString("11111111-2222-3333-4444-555566660001"));
+    void whenGetAllAvailableHelpRequest() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.AVAILABLE)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()))
+                .andExpect(jsonPath("$[0].status").value("FINDING_VOLUNTEER"))
+                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
     }
 
     @Test
-    void whenDeleteRequestById_thenDeleteRequest() throws Exception{
-        mockMvc.perform(delete(HelpRequestResource.HELPREQUESTS+HelpRequestResource.ID,
-                UUID.fromString("11111111-2222-3333-4444-555566660004"))
-                .with(jwt().jwt(j -> j.subject(seniorEmail))
-                        .authorities(()-> "ROLE_SENIOR"))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk());
-        verify(helpRequestService).deleteById(UUID.fromString("11111111-2222-3333-4444-555566660004"));
-    }
+    void whenUpdateRequestStatusById() throws Exception {
+        long supportSessionsBefore = this.supportSessionRepository.count();
+        String jsonRequestStatus =  """
+            {
+              "status": "IN_PROGRESS"
+            }
+            """;
 
-    @Test
-    void whenGetAllAvailableHelpRequest() throws Exception{
-        mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.AVAILABLE)
-                .with(jwt().jwt(j -> j.subject(volunteerEmail))
-                        .authorities(()-> "ROLE_VOLUNTEER"))
-                .contentType(MediaType.APPLICATION_JSON)
-        ).andExpect(status().isOk());
-        verify(helpRequestService).getAllAvailableHelpRequests();
-    }
+        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS + HelpRequestResource.ID, REQUEST_ID_FINDING_VOLUNTEER)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequestStatus))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"));
 
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_FINDING_VOLUNTEER))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.IN_PROGRESS);
+        assertThat(this.supportSessionRepository.count()).isEqualTo(supportSessionsBefore + 1);
+    }
 }

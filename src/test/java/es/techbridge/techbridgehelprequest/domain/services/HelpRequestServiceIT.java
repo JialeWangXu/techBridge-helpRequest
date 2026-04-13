@@ -8,26 +8,34 @@ import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
-import org.assertj.core.api.AssertionsForClassTypes;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.InstanceOfAssertFactories.LIST;
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
-@ActiveProfiles("test") // Asegúrate de tener un application-test.yml para H2
+@Transactional
+@ActiveProfiles("test")
 class HelpRequestServiceIT {
+
+    private static final UUID SENIOR_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID VOLUNTEER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private static final UUID REQUEST_ID_FINDING_VOLUNTEER = UUID.fromString("11111111-2222-3333-4444-555566660001");
+    private static final UUID REQUEST_ID_IN_PROGRESS = UUID.fromString("11111111-2222-3333-4444-555566660002");
+    private static final String SENIOR_EMAIL = "manolo@gmail.com";
+    private static final String VOLUNTEER_EMAIL = "lucia@volunteer.org";
 
     @Autowired
     private HelpRequestService helpRequestService;
@@ -35,47 +43,105 @@ class HelpRequestServiceIT {
     @Autowired
     private HelpRequestRepository helpRequestRepository;
 
+    @Autowired
+    private SupportSessionRepository supportSessionRepository;
+
     @MockitoBean
     private UserWebClient userWebClient;
 
-    private final String seniorEmail = "manolo@gmail.com";
-    
-    private final UserDto senior = UserDto.builder().id(UUID.fromString("11111111-1111-1111-1111-111111111111"))
-            .firstName("Manolo")
-            .lastName("García").email(seniorEmail)
-            .role(UserRole.SENIOR)
-            .build();
+    private UserDto senior;
+    private UserDto volunteer;
+
+    @BeforeEach
+    void setUp() {
+        this.senior = UserDto.builder()
+                .id(SENIOR_ID)
+                .firstName("Manolo")
+                .lastName("Garcia")
+                .email(SENIOR_EMAIL)
+                .role(UserRole.SENIOR)
+                .build();
+        this.volunteer = UserDto.builder()
+                .id(VOLUNTEER_ID)
+                .firstName("Lucia")
+                .lastName("Lopez")
+                .email(VOLUNTEER_EMAIL)
+                .role(UserRole.VOLUNTEER)
+                .build();
+
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(this.senior);
+        BDDMockito.given(this.userWebClient.readById(any(UUID.class)))
+                .willAnswer(invocation -> {
+                    UUID id = invocation.getArgument(0);
+                    if (VOLUNTEER_ID.equals(id)) {
+                        return this.volunteer;
+                    }
+                    return this.senior;
+                });
+    }
 
     @Test
-     void create() {
+    void create() {
         HelpRequest helpRequest = HelpRequest.builder()
                 .title("Test1")
                 .description("Testing1")
                 .status(RequestStatus.OPEN)
                 .build();
-        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
-                .willAnswer(invocation -> senior);
-        this.helpRequestService.create(seniorEmail,helpRequest);
-        List<HelpRequestEntity> helpRequestEntities = this.helpRequestRepository.findBySeniorId(senior.getId());
+
+        this.helpRequestService.create(SENIOR_EMAIL, helpRequest);
+
+        List<HelpRequestEntity> helpRequestEntities = this.helpRequestRepository.findBySeniorId(this.senior.getId());
         HelpRequestEntity result = helpRequestEntities.stream()
-                .filter(x -> x.getTitle().equals("Test1")).findFirst().get();
-        assertThat(result.getTitle()).isEqualTo("Test1");
+                .filter(entity -> entity.getTitle().equals("Test1"))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(helpRequestEntities).hasSize(4);
+        assertThat(result.getDescription()).isEqualTo("Testing1");
+        assertThat(result.getStatus()).isEqualTo(RequestStatus.OPEN);
+        assertThat(result.getSeniorId()).isEqualTo(SENIOR_ID);
     }
 
     @Test
-    void getHelpRequestsByEmail(){
-        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
-                .willAnswer(invocation -> senior);
-        List<HelpRequest> result = this.helpRequestService.getHelpRequestsByEmail(seniorEmail);
+    void getHelpRequestsByEmail() {
+        List<HelpRequest> result = this.helpRequestService.getHelpRequestsByEmail(SENIOR_EMAIL);
+
         assertThat(result).isNotNull();
         assertThat(result).hasSize(3);
+        assertThat(result)
+                .extracting(HelpRequest::getId)
+                .containsExactlyInAnyOrder(
+                        REQUEST_ID_FINDING_VOLUNTEER,
+                        REQUEST_ID_IN_PROGRESS,
+                        UUID.fromString("11111111-2222-3333-4444-555566660003")
+                );
+        assertThat(result)
+                .extracting(helpRequest -> helpRequest.getSenior().getEmail())
+                .containsOnly(SENIOR_EMAIL);
     }
 
     @Test
-    void getById(){
-        HelpRequest request = this.helpRequestService.getById(UUID.fromString("11111111-2222-3333-4444-555566660001"));
+    void getById() {
+        HelpRequest request = this.helpRequestService.getById(REQUEST_ID_FINDING_VOLUNTEER);
+
         assertThat(request).isNotNull();
-        assertThat(request.getId()).isEqualTo(UUID.fromString("11111111-2222-3333-4444-555566660001"));
+        assertThat(request.getId()).isEqualTo(REQUEST_ID_FINDING_VOLUNTEER);
+        assertThat(request.getTitle()).contains("Tablet");
+        assertThat(request.getStatus()).isEqualTo(RequestStatus.FINDING_VOLUNTEER);
+        assertThat(request.getSenior().getEmail()).isEqualTo(SENIOR_EMAIL);
+        assertThat(request.getVolunteer()).isNull();
+    }
+
+    @Test
+    void getByIdWithVolunteer() {
+        HelpRequest request = this.helpRequestService.getById(REQUEST_ID_IN_PROGRESS);
+
+        assertThat(request).isNotNull();
+        assertThat(request.getId()).isEqualTo(REQUEST_ID_IN_PROGRESS);
+        assertThat(request.getStatus()).isEqualTo(RequestStatus.IN_PROGRESS);
+        assertThat(request.getSenior().getEmail()).isEqualTo(SENIOR_EMAIL);
+        assertThat(request.getVolunteer().getEmail()).isEqualTo(VOLUNTEER_EMAIL);
     }
 
     @Test
@@ -88,32 +154,63 @@ class HelpRequestServiceIT {
     }
 
     @Test
-    void deleteById(){
+    void deleteById() {
         HelpRequestEntity requestToDelete = HelpRequestEntity.builder()
                 .id(UUID.fromString("11111111-2222-3333-4444-555566660004"))
                 .title("Delete")
                 .description("Delete")
                 .status(RequestStatus.CANCELLED)
-                .createdAt(LocalDateTime.now().minusHours(5))
-                .seniorId(senior.getId())
+                .seniorId(SENIOR_ID)
                 .build();
         this.helpRequestRepository.save(requestToDelete);
+
         this.helpRequestService.deleteById(UUID.fromString("11111111-2222-3333-4444-555566660004"));
-        AssertionsForClassTypes.assertThatThrownBy(() -> this.helpRequestService.getById(UUID.fromString("11111111-2222-3333-4444-555566660004")))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("11111111-2222-3333-4444-555566660004");
+
+        assertThat(this.helpRequestRepository.existsById(UUID.fromString("11111111-2222-3333-4444-555566660004"))).isFalse();
     }
 
     @Test
-    void deleteByIdNotFound(){
-        assertThatThrownBy(()->this.helpRequestService.deleteById(UUID.fromString("11111111-2222-3333-4444-777866660001")))
+    void deleteByIdNotFound() {
+        UUID id = UUID.fromString("11111111-2222-3333-4444-777866660001");
+
+        assertThatThrownBy(() -> this.helpRequestService.deleteById(id))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("11111111-2222-3333-4444-777866660001");
+                .hasMessageContaining(id.toString());
     }
 
     @Test
-    void getAllAvailableRequests(){
+    void getAllAvailableRequests() {
         List<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests();
+
         assertThat(result).hasSize(1);
+        assertThat(result.getFirst().getId()).isEqualTo(REQUEST_ID_FINDING_VOLUNTEER);
+        assertThat(result.getFirst().getStatus()).isEqualTo(RequestStatus.FINDING_VOLUNTEER);
+        assertThat(result.getFirst().getSenior().getEmail()).isEqualTo(SENIOR_EMAIL);
+    }
+
+    @Test
+    void updateStatusToInProgress_thenUpdatedAndCreateASupportSession() {
+        long supportSessionsBefore = this.supportSessionRepository.count();
+
+        HelpRequest helpRequest = this.helpRequestService.updateRequestStatusById(
+                REQUEST_ID_FINDING_VOLUNTEER,
+                RequestStatus.IN_PROGRESS
+        );
+
+        assertThat(helpRequest.getStatus()).isEqualTo(RequestStatus.IN_PROGRESS);
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_FINDING_VOLUNTEER))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.IN_PROGRESS);
+        assertThat(this.supportSessionRepository.count()).isEqualTo(supportSessionsBefore + 1);
+    }
+
+    @Test
+    void updateStatusByIdNotFound() {
+        UUID id = UUID.fromString("11111111-2222-3333-4444-777866660010");
+
+        assertThatThrownBy(() -> this.helpRequestService.updateRequestStatusById(id, RequestStatus.IN_PROGRESS))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining(id.toString());
     }
 }

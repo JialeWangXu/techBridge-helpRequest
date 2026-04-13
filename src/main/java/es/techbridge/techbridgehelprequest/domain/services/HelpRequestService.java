@@ -1,10 +1,13 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -16,12 +19,14 @@ public class HelpRequestService {
 
     private final HelpRequestPersistence helpRequestPersistence;
     private final UserWebClient userWebClient;
+    private final SupportSessionService supportSessionService;
 
     @Autowired
     public HelpRequestService(HelpRequestPersistence helpRequestPersistence,
-                              UserWebClient userWebClient) {
+                              UserWebClient userWebClient, SupportSessionService supportSessionService) {
         this.helpRequestPersistence = helpRequestPersistence;
         this.userWebClient = userWebClient;
+        this.supportSessionService = supportSessionService;
     }
 
     public void create(String email, HelpRequest helpRequest){
@@ -51,6 +56,8 @@ public class HelpRequestService {
         }else{
             helpRequest.setVolunteer(null);
         }
+        UserDto senior = this.userWebClient.readById(helpRequest.getSenior().getId());
+        helpRequest.setSenior(senior);
         return helpRequest;
     }
 
@@ -67,5 +74,20 @@ public class HelpRequestService {
                 )
                 .toList();
 
+    }
+
+    public HelpRequest updateRequestStatusById(UUID id, RequestStatus status){
+        HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
+
+        // si el voluntario acceptado la peticion, se crea un sessionSupport
+        if(status == RequestStatus.IN_PROGRESS){
+            SupportSession supportSession = SupportSession.builder()
+                    .status(HelpStatus.ACTIVE)
+                    .helpRequest(helpRequest)
+                    .build();
+            this.supportSessionService.create(supportSession);
+        }
+
+        return this.helpRequestPersistence.updateRequestStatusById(id,status).toHelpRequest();
     }
 }

@@ -33,7 +33,7 @@ public class SupportSessionEntity extends BaseAuditEntity{
     private String volunteerNotes;
 
     @Enumerated(EnumType.STRING)
-    private HelpStatus status = HelpStatus.PENDING;
+    private HelpStatus status = HelpStatus.ACTIVE;
 
     @OneToOne
     @JoinColumn(name = "help_request_id")
