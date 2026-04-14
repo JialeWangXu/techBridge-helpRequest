@@ -44,6 +44,7 @@ public class SupportSessionEntity extends BaseAuditEntity{
         this.s3RecordingUrl = dto.getS3RecordingUrl();
         this.recordingConsent = dto.getRecordingConsent();
         this.volunteerNotes = dto.getVolunteerNotes();
+        this.helpRequest = new HelpRequestEntity(dto.getHelpRequest());
         this.status = dto.getStatus();
     }
 

@@ -3,8 +3,10 @@ package es.techbridge.techbridgehelprequest.infrastructure.resource;
 import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.resources.HelpRequestResource;
@@ -43,6 +45,8 @@ class HelpRequestResourceIT {
     private static final UUID SENIOR_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private static final UUID VOLUNTEER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID REQUEST_ID_FINDING_VOLUNTEER = UUID.fromString("11111111-2222-3333-4444-555566660001");
+    private static final UUID REQUEST_ID_IN_PROGRESS = UUID.fromString("11111111-2222-3333-4444-555566660002");
+    private static final UUID SUPPORT_SESSION_ID_IN_PROGRESS = UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0003");
     private static final String SENIOR_EMAIL = "manolo@gmail.com";
     private static final String VOLUNTEER_EMAIL = "lucia@volunteer.org";
 
@@ -213,8 +217,63 @@ class HelpRequestResourceIT {
 
         assertThat(this.helpRequestRepository.findById(REQUEST_ID_FINDING_VOLUNTEER))
                 .get()
-                .extracting(HelpRequestEntity::getStatus)
-                .isEqualTo(RequestStatus.IN_PROGRESS);
+                .satisfies(request -> {
+                    assertThat(request.getStatus()).isEqualTo(RequestStatus.IN_PROGRESS);
+                });
         assertThat(this.supportSessionRepository.count()).isEqualTo(supportSessionsBefore + 1);
+    }
+
+    @Test
+    void whenUpdateRequestStatusToCancelled_thenCancelSupportSession() throws Exception {
+        String jsonRequestStatus = """
+            {
+              "status": "CANCELLED"
+            }
+            """;
+
+        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS + HelpRequestResource.ID, REQUEST_ID_IN_PROGRESS)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequestStatus))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(REQUEST_ID_IN_PROGRESS.toString()))
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_IN_PROGRESS))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.CANCELLED);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .extracting(SupportSessionEntity::getStatus)
+                .isEqualTo(HelpStatus.CANCELLED);
+    }
+
+    @Test
+    void whenUpdateRequestStatusToCompleted_thenFinishSupportSession() throws Exception {
+        String jsonRequestStatus = """
+            {
+              "status": "COMPLETED"
+            }
+            """;
+
+        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS + HelpRequestResource.ID, REQUEST_ID_IN_PROGRESS)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequestStatus))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(REQUEST_ID_IN_PROGRESS.toString()))
+                .andExpect(jsonPath("$.status").value("COMPLETED"));
+
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_IN_PROGRESS))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.COMPLETED);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .extracting(SupportSessionEntity::getStatus)
+                .isEqualTo(HelpStatus.FINISHED);
     }
 }
