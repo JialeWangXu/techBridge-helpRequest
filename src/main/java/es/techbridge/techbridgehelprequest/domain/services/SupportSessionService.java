@@ -2,8 +2,11 @@ package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.persistence.SupportSessionPersistence;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 public class SupportSessionService {
@@ -15,7 +18,12 @@ public class SupportSessionService {
         this.supportSessionPersistence = supportSessionPersistence;
     }
 
-    public void create(SupportSession supportSession){
-        this.supportSessionPersistence.create(supportSession);
+    public SupportSession create(SupportSession supportSession){
+        return this.supportSessionPersistence.create(supportSession).toSupportSession();
     }
+
+    public void updateHelpStatusById(UUID id, HelpStatus status){
+        this.supportSessionPersistence.updateHelpStatusById(status,id).toSupportSession();
+    }
+
 }

@@ -64,8 +64,9 @@ public class HelpRequestResource {
 
     @PutMapping(ID)
     @PreAuthorize("hasAnyRole('SENIOR','VOLUNTEER')")
-    public HelpRequest updateRequestStatusById(@RequestBody RequestStatusDto status, @PathVariable UUID id){
-        return this.helpRequestService.updateRequestStatusById(id,status.getStatus());
+    public HelpRequest updateRequestStatusById(@AuthenticationPrincipal Jwt jtw, @RequestBody RequestStatusDto status, @PathVariable UUID id){
+        String email = jtw.getSubject();
+        return this.helpRequestService.updateRequestStatusById(email,id,status.getStatus());
     }
 
 }

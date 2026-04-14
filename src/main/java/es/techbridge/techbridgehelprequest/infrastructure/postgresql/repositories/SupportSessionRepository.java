@@ -10,6 +10,6 @@ import java.util.UUID;
 @Repository
 public interface SupportSessionRepository extends JpaRepository<SupportSessionEntity, UUID> {
 
-    Optional<SupportSessionEntity> findById(UUID uuid);
+    Optional<SupportSessionEntity> findById(UUID id);
 
 }

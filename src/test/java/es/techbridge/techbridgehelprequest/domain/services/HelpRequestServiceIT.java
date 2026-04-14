@@ -5,8 +5,10 @@ import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,7 @@ class HelpRequestServiceIT {
     private static final UUID VOLUNTEER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID REQUEST_ID_FINDING_VOLUNTEER = UUID.fromString("11111111-2222-3333-4444-555566660001");
     private static final UUID REQUEST_ID_IN_PROGRESS = UUID.fromString("11111111-2222-3333-4444-555566660002");
+    private static final UUID SUPPORT_SESSION_ID_IN_PROGRESS = UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0003");
     private static final String SENIOR_EMAIL = "manolo@gmail.com";
     private static final String VOLUNTEER_EMAIL = "lucia@volunteer.org";
 
@@ -192,16 +195,20 @@ class HelpRequestServiceIT {
     void updateStatusToInProgress_thenUpdatedAndCreateASupportSession() {
         long supportSessionsBefore = this.supportSessionRepository.count();
 
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(this.volunteer);
         HelpRequest helpRequest = this.helpRequestService.updateRequestStatusById(
+                VOLUNTEER_EMAIL,
                 REQUEST_ID_FINDING_VOLUNTEER,
                 RequestStatus.IN_PROGRESS
         );
-
         assertThat(helpRequest.getStatus()).isEqualTo(RequestStatus.IN_PROGRESS);
         assertThat(this.helpRequestRepository.findById(REQUEST_ID_FINDING_VOLUNTEER))
                 .get()
-                .extracting(HelpRequestEntity::getStatus)
-                .isEqualTo(RequestStatus.IN_PROGRESS);
+                .satisfies(request -> {
+                    assertThat(request.getStatus()).isEqualTo(RequestStatus.IN_PROGRESS);
+                    assertThat(request.getVolunteerId()).isEqualTo(VOLUNTEER_ID);
+                });
         assertThat(this.supportSessionRepository.count()).isEqualTo(supportSessionsBefore + 1);
     }
 
@@ -209,8 +216,50 @@ class HelpRequestServiceIT {
     void updateStatusByIdNotFound() {
         UUID id = UUID.fromString("11111111-2222-3333-4444-777866660010");
 
-        assertThatThrownBy(() -> this.helpRequestService.updateRequestStatusById(id, RequestStatus.IN_PROGRESS))
+        assertThatThrownBy(() -> this.helpRequestService.updateRequestStatusById(VOLUNTEER_EMAIL,id, RequestStatus.IN_PROGRESS))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining(id.toString());
+    }
+
+    @Test
+    void updateStatusToCancelled_thenUpdatedAndCancelSupportSession() {
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(this.volunteer);
+        HelpRequest helpRequest = this.helpRequestService.updateRequestStatusById(
+                VOLUNTEER_EMAIL,
+                REQUEST_ID_IN_PROGRESS,
+                RequestStatus.CANCELLED
+        );
+
+        assertThat(helpRequest.getStatus()).isEqualTo(RequestStatus.CANCELLED);
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_IN_PROGRESS))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.CANCELLED);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .extracting(SupportSessionEntity::getStatus)
+                .isEqualTo(HelpStatus.CANCELLED);
+    }
+
+    @Test
+    void updateStatusToCompleted_thenUpdatedAndFinishSupportSession() {
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(this.volunteer);
+        HelpRequest helpRequest = this.helpRequestService.updateRequestStatusById(
+                VOLUNTEER_EMAIL,
+                REQUEST_ID_IN_PROGRESS,
+                RequestStatus.COMPLETED
+        );
+
+        assertThat(helpRequest.getStatus()).isEqualTo(RequestStatus.COMPLETED);
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_IN_PROGRESS))
+                .get()
+                .extracting(HelpRequestEntity::getStatus)
+                .isEqualTo(RequestStatus.COMPLETED);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .extracting(SupportSessionEntity::getStatus)
+                .isEqualTo(HelpStatus.FINISHED);
     }
 }

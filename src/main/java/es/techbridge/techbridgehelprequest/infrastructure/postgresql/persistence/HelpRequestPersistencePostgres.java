@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -59,14 +60,17 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     }
 
     @Override
-    public HelpRequestEntity updateRequestStatusById(UUID id, RequestStatus requestStatus) {
-        if(!this.helpRequestRepository.existsById(id)){
+    public HelpRequestEntity updateRequestStatusById(UUID id, RequestStatus requestStatus, UUID volunteerId) {
+        Optional<HelpRequestEntity> request = this.helpRequestRepository.findById(id);
+        if(request.isEmpty()){
             throw new NotFoundException("No Help request found with the ID: "+id);
         }
-        HelpRequestEntity request = this.helpRequestRepository.findById(id).get();
-        request.setStatus(requestStatus);
-        this.helpRequestRepository.save(request);
-        return request;
+        if (volunteerId!=null){
+            request.get().setVolunteerId(volunteerId);
+        }
+        request.get().setStatus(requestStatus);
+        this.helpRequestRepository.save(request.get());
+        return request.get();
     }
 
 }

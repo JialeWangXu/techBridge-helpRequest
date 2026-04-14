@@ -76,18 +76,32 @@ public class HelpRequestService {
 
     }
 
-    public HelpRequest updateRequestStatusById(UUID id, RequestStatus status){
+    public HelpRequest updateRequestStatusById(String volunteerEmail, UUID id, RequestStatus status){
         HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
+        UUID volunteerId = null;
 
         // si el voluntario acceptado la peticion, se crea un sessionSupport
         if(status == RequestStatus.IN_PROGRESS){
+            UserDto volunteer = this.userWebClient.readByEmail(volunteerEmail);
+            volunteerId = volunteer.getId();
+            helpRequest.setVolunteer(volunteer);
             SupportSession supportSession = SupportSession.builder()
                     .status(HelpStatus.ACTIVE)
                     .helpRequest(helpRequest)
                     .build();
-            this.supportSessionService.create(supportSession);
+            helpRequest.setSupportSession(this.supportSessionService.create(supportSession));
+        }else if (status == RequestStatus.CANCELLED){
+            this.supportSessionService.updateHelpStatusById(helpRequest.getSupportSession().getId(),HelpStatus.CANCELLED);
+        }else if (status == RequestStatus.COMPLETED){
+            this.supportSessionService.updateHelpStatusById(helpRequest.getSupportSession().getId(),HelpStatus.FINISHED);
         }
 
-        return this.helpRequestPersistence.updateRequestStatusById(id,status).toHelpRequest();
+        HelpRequest updatedHelpRequest = this.helpRequestPersistence.updateRequestStatusById(id, status, volunteerId).toHelpRequest();
+        updatedHelpRequest.setSenior(this.userWebClient.readById(updatedHelpRequest.getSenior().getId()));
+        if (status == RequestStatus.IN_PROGRESS && updatedHelpRequest.getSupportSession() == null) {
+            updatedHelpRequest.setSupportSession(helpRequest.getSupportSession());
+        }
+
+        return updatedHelpRequest;
     }
 }
