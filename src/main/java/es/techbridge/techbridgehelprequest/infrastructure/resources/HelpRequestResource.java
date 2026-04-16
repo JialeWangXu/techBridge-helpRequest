@@ -3,7 +3,6 @@ package es.techbridge.techbridgehelprequest.infrastructure.resources;
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.RequestStatusDto;
 import es.techbridge.techbridgehelprequest.domain.services.HelpRequestService;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;

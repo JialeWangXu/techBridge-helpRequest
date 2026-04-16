@@ -27,6 +27,8 @@ public class SupportSessionEntity extends BaseAuditEntity{
 
     private String s3RecordingUrl;
 
+    private String meetingUrl;
+
     private Boolean recordingConsent = false;
 
     @Column(columnDefinition = "TEXT")
@@ -42,6 +44,7 @@ public class SupportSessionEntity extends BaseAuditEntity{
     public SupportSessionEntity(SupportSession dto){
         this.sessionMethod = dto.getSessionMethod();
         this.s3RecordingUrl = dto.getS3RecordingUrl();
+        this.meetingUrl = dto.getMeetingUrl();
         this.recordingConsent = dto.getRecordingConsent();
         this.volunteerNotes = dto.getVolunteerNotes();
         this.helpRequest = new HelpRequestEntity(dto.getHelpRequest());
@@ -56,6 +59,7 @@ public class SupportSessionEntity extends BaseAuditEntity{
                 .sessionMethod(this.sessionMethod)
                 .s3RecordingUrl(this.s3RecordingUrl)
                 .recordingConsent(this.recordingConsent)
+                .meetingUrl(this.meetingUrl)
                 .volunteerNotes(this.volunteerNotes)
                 .status(this.status)
                 .build();

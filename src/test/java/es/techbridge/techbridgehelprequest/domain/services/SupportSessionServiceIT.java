@@ -82,4 +82,86 @@ public class SupportSessionServiceIT {
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining(id.toString());
     }
+
+    @Test
+    void saveSessionMethod_thenOnlyNonNullFieldsAreUpdated() {
+        SupportSession partialUpdate = SupportSession.builder()
+                .sessionMethod(SessionMethods.IN_PERSON)
+                .build();
+
+        SupportSession supportSession = this.supportSessionService.saveSessionMethod(
+                partialUpdate,
+                SUPPORT_SESSION_ID_IN_PROGRESS
+        );
+
+        assertThat(supportSession.getId()).isEqualTo(SUPPORT_SESSION_ID_IN_PROGRESS);
+        assertThat(supportSession.getSessionMethod()).isEqualTo(SessionMethods.IN_PERSON);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .satisfies(session -> {
+                    assertThat(session.getSessionMethod()).isEqualTo(SessionMethods.IN_PERSON);
+                    assertThat(session.getStatus()).isEqualTo(HelpStatus.ACTIVE);
+                    assertThat(session.getRecordingConsent()).isTrue();
+                    assertThat(session.getS3RecordingUrl()).isEqualTo("https://s3.aws.com/techbridge/session001.mp4");
+                    assertThat(session.getVolunteerNotes()).isEqualTo("El senior progresa adecuadamente con la tablet.");
+                });
+    }
+
+    @Test
+    void saveSessionMethod_thenUpdateSeveralFieldsAndKeepRemainingOnes() {
+        SupportSession partialUpdate = SupportSession.builder()
+                .recordingConsent(false)
+                .volunteerNotes("Sesion actualizada desde test")
+                .build();
+
+        SupportSession supportSession = this.supportSessionService.saveSessionMethod(
+                partialUpdate,
+                SUPPORT_SESSION_ID_IN_PROGRESS
+        );
+
+        assertThat(supportSession.getId()).isEqualTo(SUPPORT_SESSION_ID_IN_PROGRESS);
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .satisfies(session -> {
+                    assertThat(session.getRecordingConsent()).isFalse();
+                    assertThat(session.getVolunteerNotes()).isEqualTo("Sesion actualizada desde test");
+                    assertThat(session.getSessionMethod()).isEqualTo(SessionMethods.ONLINE_MEETING);
+                    assertThat(session.getStatus()).isEqualTo(HelpStatus.ACTIVE);
+                    assertThat(session.getS3RecordingUrl()).isEqualTo("https://s3.aws.com/techbridge/session001.mp4");
+                });
+    }
+
+    @Test
+    void saveSessionMethod_thenUpdateMeetingUrl() {
+        SupportSession partialUpdate = SupportSession.builder()
+                .meetingUrl("https://meet.techbridge.dev/session-123")
+                .build();
+
+        SupportSession supportSession = this.supportSessionService.saveSessionMethod(
+                partialUpdate,
+                SUPPORT_SESSION_ID_IN_PROGRESS
+        );
+
+        assertThat(supportSession.getId()).isEqualTo(SUPPORT_SESSION_ID_IN_PROGRESS);
+        assertThat(supportSession.getMeetingUrl()).isEqualTo("https://meet.techbridge.dev/session-123");
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .satisfies(session -> {
+                    assertThat(session.getMeetingUrl()).isEqualTo("https://meet.techbridge.dev/session-123");
+                    assertThat(session.getSessionMethod()).isEqualTo(SessionMethods.ONLINE_MEETING);
+                    assertThat(session.getStatus()).isEqualTo(HelpStatus.ACTIVE);
+                });
+    }
+
+    @Test
+    void saveSessionMethodNotFound() {
+        UUID id = UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0888");
+        SupportSession partialUpdate = SupportSession.builder()
+                .sessionMethod(SessionMethods.ONLINE_MEETING)
+                .build();
+
+        assertThatThrownBy(() -> this.supportSessionService.saveSessionMethod(partialUpdate, id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining(id.toString());
+    }
 }
