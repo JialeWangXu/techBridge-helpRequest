@@ -1,9 +1,11 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.persistence;
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
+import es.techbridge.techbridgehelprequest.domain.mapper.SupportSessionMapper;
 import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.persistence.SupportSessionPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,10 +19,12 @@ import java.util.UUID;
 public class SupportSessionPersistencePostgres implements SupportSessionPersistence {
 
     private final SupportSessionRepository supportSessionRepository;
+    private final SupportSessionMapper mapper;
 
     @Autowired
-    public SupportSessionPersistencePostgres(SupportSessionRepository supportSessionRepository) {
+    public SupportSessionPersistencePostgres(SupportSessionRepository supportSessionRepository, SupportSessionMapper mapper) {
         this.supportSessionRepository = supportSessionRepository;
+        this.mapper = mapper;
     }
 
     @Override
@@ -42,6 +46,18 @@ public class SupportSessionPersistencePostgres implements SupportSessionPersiste
         }else{
             throw new NotFoundException("No support session found with ID: "+id);
         }
+    }
+
+    @Override
+    public SupportSessionEntity saveSessionMethod(SupportSession session, UUID id) {
+
+        SupportSessionEntity entity = this.supportSessionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No support session found with ID: "+id));
+
+        this.mapper.updateEntityFromDto(session,entity);
+
+        this.supportSessionRepository.save(entity);
+        return entity;
     }
 
 }

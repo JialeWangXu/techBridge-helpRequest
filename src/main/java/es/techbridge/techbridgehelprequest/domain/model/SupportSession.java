@@ -21,6 +21,8 @@ public class SupportSession {
 
     private String s3RecordingUrl;
 
+    private String meetingUrl;
+
     private Boolean recordingConsent;
 
     private String volunteerNotes;

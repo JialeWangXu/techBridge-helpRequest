@@ -11,4 +11,6 @@ public interface SupportSessionPersistence {
     SupportSessionEntity create(SupportSession supportSession);
 
     SupportSessionEntity updateHelpStatusById(HelpStatus helpStatus, UUID uuid);
+
+    SupportSessionEntity saveSessionMethod(SupportSession session, UUID id);
 }

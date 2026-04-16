@@ -85,6 +85,7 @@ public class SeederForDev {
                         .status(HelpStatus.ACTIVE)
                         .recordingConsent(true)
                         .s3RecordingUrl("https://s3.aws.com/techbridge/session001.mp4")
+                        .meetingUrl("http://meeting.test.com")
                         .volunteerNotes("El senior progresa adecuadamente con la tablet.")
                         .helpRequest(requests[1]) // Vinculada a "App del Banco"
                         .build(),
