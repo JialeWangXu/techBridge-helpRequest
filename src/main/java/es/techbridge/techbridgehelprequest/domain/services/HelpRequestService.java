@@ -37,7 +37,7 @@ public class HelpRequestService {
         this.helpRequestPersistence.create(helpRequest);
     }
 
-    public List<HelpRequest> getHelpRequestsByEmail(String email){
+    public List<HelpRequest> getSeniorHelpRequestsByEmail(String email){
 
         UserDto senior = this.userWebClient.readByEmail(email);
 
@@ -103,5 +103,17 @@ public class HelpRequestService {
         }
 
         return updatedHelpRequest;
+    }
+
+    public List<HelpRequest> getVolunteerHelpRequestsByEmail(String email){
+        UserDto volunteer = this.userWebClient.readByEmail(email);
+        return this.helpRequestPersistence.getHelpRequestsByVolunteerId(volunteer.getId())
+                .stream()
+                .map(HelpRequestEntity::toHelpRequest)
+                .peek(helpRequest -> {
+                    UserDto senior = this.userWebClient.readById(helpRequest.getSenior().getId());
+                    helpRequest.setSenior(senior);
+                })
+                .toList();
     }
 }

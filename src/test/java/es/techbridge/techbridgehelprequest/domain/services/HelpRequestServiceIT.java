@@ -107,8 +107,8 @@ class HelpRequestServiceIT {
     }
 
     @Test
-    void getHelpRequestsByEmail() {
-        List<HelpRequest> result = this.helpRequestService.getHelpRequestsByEmail(SENIOR_EMAIL);
+    void getSeniorHelpRequestsByEmail() {
+        List<HelpRequest> result = this.helpRequestService.getSeniorHelpRequestsByEmail(SENIOR_EMAIL);
 
         assertThat(result).isNotNull();
         assertThat(result).hasSize(3);
@@ -116,6 +116,26 @@ class HelpRequestServiceIT {
                 .extracting(HelpRequest::getId)
                 .containsExactlyInAnyOrder(
                         REQUEST_ID_FINDING_VOLUNTEER,
+                        REQUEST_ID_IN_PROGRESS,
+                        UUID.fromString("11111111-2222-3333-4444-555566660003")
+                );
+        assertThat(result)
+                .extracting(helpRequest -> helpRequest.getSenior().getEmail())
+                .containsOnly(SENIOR_EMAIL);
+    }
+
+    @Test
+    void getVolunteerHelpRequestsByEmail() {
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(this.volunteer);
+
+        List<HelpRequest> result = this.helpRequestService.getVolunteerHelpRequestsByEmail(VOLUNTEER_EMAIL);
+
+        assertThat(result).isNotNull();
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .extracting(HelpRequest::getId)
+                .containsExactlyInAnyOrder(
                         REQUEST_ID_IN_PROGRESS,
                         UUID.fromString("11111111-2222-3333-4444-555566660003")
                 );
@@ -189,6 +209,26 @@ class HelpRequestServiceIT {
         assertThat(result.getFirst().getId()).isEqualTo(REQUEST_ID_FINDING_VOLUNTEER);
         assertThat(result.getFirst().getStatus()).isEqualTo(RequestStatus.FINDING_VOLUNTEER);
         assertThat(result.getFirst().getSenior().getEmail()).isEqualTo(SENIOR_EMAIL);
+    }
+
+    @Test
+    void getAllAvailableRequests_thenExcludeFindingVolunteerRequestsAlreadyAssigned() {
+        this.helpRequestRepository.save(HelpRequestEntity.builder()
+                .id(UUID.fromString("11111111-2222-3333-4444-555566660099"))
+                .title("Peticion inconsistente")
+                .description("Tiene voluntario asignado pero sigue en FINDING_VOLUNTEER")
+                .status(RequestStatus.FINDING_VOLUNTEER)
+                .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660099"))
+                .seniorId(SENIOR_ID)
+                .volunteerId(VOLUNTEER_ID)
+                .build());
+
+        List<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests();
+
+        assertThat(result).hasSize(1);
+        assertThat(result)
+                .extracting(HelpRequest::getId)
+                .containsExactly(REQUEST_ID_FINDING_VOLUNTEER);
     }
 
     @Test

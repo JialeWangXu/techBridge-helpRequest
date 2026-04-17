@@ -23,6 +23,7 @@ class HelpRequestRepositoryTest {
     @Autowired
     private HelpRequestRepository helpRequestRepository;
     private final UUID seniorId = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private final UUID volunteerId = UUID.fromString("22222222-2222-2222-2222-222222222222");
 
     @Test
     void shouldFindSeedDataById() {
@@ -60,5 +61,18 @@ class HelpRequestRepositoryTest {
     void shouldFindAvailableRequests(){
         List<HelpRequestEntity> result = this.helpRequestRepository.findAllByStatus(RequestStatus.FINDING_VOLUNTEER);
         assertThat(result).hasSize(1);
+    }
+
+    @Test
+    void shouldFindRequestsByVolunteerId() {
+        List<HelpRequestEntity> result = this.helpRequestRepository.findAllByVolunteerId(volunteerId);
+
+        assertThat(result).hasSize(2);
+        assertThat(result)
+                .extracting(HelpRequestEntity::getId)
+                .containsExactlyInAnyOrder(
+                        UUID.fromString("11111111-2222-3333-4444-555566660002"),
+                        UUID.fromString("11111111-2222-3333-4444-555566660003")
+                );
     }
 }

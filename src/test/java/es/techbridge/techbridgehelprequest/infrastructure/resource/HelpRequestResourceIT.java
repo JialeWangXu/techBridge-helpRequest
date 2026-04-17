@@ -140,13 +140,33 @@ class HelpRequestResourceIT {
     }
 
     @Test
-    void whenGetHelpRequestByEmail_thenReturnResult() throws Exception {
-        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS)
+    void whenGetSeniorHelpRequestsByEmail_thenReturnResult() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.SENIOR_MY)
                         .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
                                 .authorities(() -> "ROLE_SENIOR"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(3))
+                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+    }
+
+    @Test
+    void whenGetVolunteerHelpRequestsByEmail_thenReturnResult() throws Exception {
+        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+                .willReturn(UserDto.builder()
+                        .id(VOLUNTEER_ID)
+                        .firstName("Lucia")
+                        .lastName("Lopez")
+                        .email(VOLUNTEER_EMAIL)
+                        .role(UserRole.VOLUNTEER)
+                        .build());
+
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.VOLUNTEER_MY)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
     }
 
@@ -195,6 +215,27 @@ class HelpRequestResourceIT {
                 .andExpect(jsonPath("$[0].id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()))
                 .andExpect(jsonPath("$[0].status").value("FINDING_VOLUNTEER"))
                 .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+    }
+
+    @Test
+    void whenGetAllAvailableHelpRequest_thenExcludeAssignedRequestsStillMarkedAsFindingVolunteer() throws Exception {
+        this.helpRequestRepository.save(HelpRequestEntity.builder()
+                .id(UUID.fromString("11111111-2222-3333-4444-555566660099"))
+                .title("Peticion inconsistente")
+                .description("Tiene voluntario asignado pero sigue en FINDING_VOLUNTEER")
+                .status(RequestStatus.FINDING_VOLUNTEER)
+                .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660099"))
+                .seniorId(SENIOR_ID)
+                .volunteerId(VOLUNTEER_ID)
+                .build());
+
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.AVAILABLE)
+                        .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                                .authorities(() -> "ROLE_VOLUNTEER"))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()));
     }
 
     @Test

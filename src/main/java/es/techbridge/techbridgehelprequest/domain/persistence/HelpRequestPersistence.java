@@ -23,4 +23,6 @@ public interface HelpRequestPersistence {
 
     HelpRequestEntity updateRequestStatusById(UUID id, RequestStatus requestStatus, UUID volunteerId);
 
+    List<HelpRequestEntity> getHelpRequestsByVolunteerId(UUID volunteerId);
+
 }

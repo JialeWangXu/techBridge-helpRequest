@@ -62,6 +62,8 @@ public class SupportSessionEntity extends BaseAuditEntity{
                 .meetingUrl(this.meetingUrl)
                 .volunteerNotes(this.volunteerNotes)
                 .status(this.status)
+                .createdAt(this.getCreatedAt())
+                .updatedAt(this.getUpdatedAt())
                 .build();
     }
 }
