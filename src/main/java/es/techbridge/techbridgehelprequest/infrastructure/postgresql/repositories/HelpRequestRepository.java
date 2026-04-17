@@ -22,4 +22,6 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequestEntity, 
     void deleteById(@NonNull UUID uuid);
 
     List<HelpRequestEntity> findAllByStatus(RequestStatus status);
+
+    List<HelpRequestEntity> findAllByVolunteerId(UUID volunteerId);
 }

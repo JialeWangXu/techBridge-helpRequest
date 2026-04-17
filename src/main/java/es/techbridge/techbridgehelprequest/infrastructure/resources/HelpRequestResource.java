@@ -21,6 +21,8 @@ public class HelpRequestResource {
 
     public static final String HELPREQUESTS = "/helprequests";
     public static final String ID = "/{id}";
+    public static final String SENIOR_MY = "/senior/my";
+    public static final String VOLUNTEER_MY = "/volunteer/my";
     public static final String AVAILABLE = "/available";
     private final HelpRequestService helpRequestService;
 
@@ -36,11 +38,11 @@ public class HelpRequestResource {
         this.helpRequestService.create(email,helpRequest);
     }
 
-    @GetMapping
+    @GetMapping(SENIOR_MY)
     @PreAuthorize("hasAnyRole('SENIOR')")
     public List<HelpRequest> getHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
         String email = jwt.getSubject();
-        return this.helpRequestService.getHelpRequestsByEmail(email);
+        return this.helpRequestService.getSeniorHelpRequestsByEmail(email);
     }
 
     @GetMapping(ID)
@@ -66,6 +68,13 @@ public class HelpRequestResource {
     public HelpRequest updateRequestStatusById(@AuthenticationPrincipal Jwt jtw, @RequestBody RequestStatusDto status, @PathVariable UUID id){
         String email = jtw.getSubject();
         return this.helpRequestService.updateRequestStatusById(email,id,status.getStatus());
+    }
+
+    @GetMapping(VOLUNTEER_MY)
+    @PreAuthorize("hasAnyRole('VOLUNTEER')")
+    public List<HelpRequest> getAllVolunteersHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
+        String email = jwt.getSubject();
+        return this.helpRequestService.getVolunteerHelpRequestsByEmail(email);
     }
 
 }
