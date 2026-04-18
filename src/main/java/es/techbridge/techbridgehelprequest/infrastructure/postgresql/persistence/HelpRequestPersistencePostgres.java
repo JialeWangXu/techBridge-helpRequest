@@ -55,7 +55,8 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
         List<HelpRequestEntity> availableHelpRequests =
                 this.helpRequestRepository.findAllByStatus(RequestStatus.FINDING_VOLUNTEER);
         return availableHelpRequests.stream()
-                .filter(helpRequestEntity -> helpRequestEntity.getAiTutorialId()!=null&&helpRequestEntity.getVolunteerId()==null)
+                .filter(helpRequestEntity -> helpRequestEntity.getAiTutorialId()!=null
+                        &&helpRequestEntity.getVolunteerId()==null)
                 .toList();
     }
 
@@ -69,6 +70,13 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
             request.get().setVolunteerId(volunteerId);
         }
         request.get().setStatus(requestStatus);
+        if (requestStatus == RequestStatus.FINDING_VOLUNTEER){
+            request.get().setVolunteerId(null);
+            if(request.get().getSupportSession()!=null){
+                request.get().setSupportSession(null);
+            }
+
+        }
         this.helpRequestRepository.save(request.get());
         return request.get();
     }

@@ -12,4 +12,6 @@ public interface SupportSessionRepository extends JpaRepository<SupportSessionEn
 
     Optional<SupportSessionEntity> findById(UUID id);
 
+    void deleteById(UUID id);
+
 }

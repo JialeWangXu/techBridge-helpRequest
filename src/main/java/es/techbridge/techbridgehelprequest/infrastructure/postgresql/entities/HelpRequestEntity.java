@@ -38,7 +38,7 @@ public class HelpRequestEntity extends BaseAuditEntity{
 
     private UUID aiTutorialId;
 
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "helpRequest")
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "helpRequest", orphanRemoval = true)
     @ToString.Exclude
     private SupportSessionEntity supportSession;
 
@@ -53,9 +53,9 @@ public class HelpRequestEntity extends BaseAuditEntity{
     public HelpRequest toHelpRequest(){
 
         SupportSession session =null;
-        UUID volunteer = null;
+        UserDto volunteer= null;
         if(this.volunteerId !=null){
-            volunteer = this.volunteerId;
+            volunteer = UserDto.builder().id(this.volunteerId).build();
         }
         if(this.supportSession!=null){
             session = this.supportSession.toSupportSession();
@@ -64,7 +64,7 @@ public class HelpRequestEntity extends BaseAuditEntity{
         return HelpRequest.builder()
                 .id(this.id)
                 .senior(UserDto.builder().id(this.seniorId).build())
-                .volunteer(UserDto.builder().id(volunteer).build())
+                .volunteer(volunteer)
                 .title(this.title)
                 .description(this.description)
                 .status(this.status)
