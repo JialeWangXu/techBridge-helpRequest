@@ -50,7 +50,7 @@ public class HelpRequestService {
 
     public HelpRequest getById(UUID id){
         HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
-        if(helpRequest.getVolunteer().getId()!=null){
+        if(helpRequest.getVolunteer()!=null&&helpRequest.getVolunteer().getId()!=null){
             UserDto volunteer = this.userWebClient.readById(helpRequest.getVolunteer().getId());
             helpRequest.setVolunteer(volunteer);
         }else{
@@ -90,9 +90,9 @@ public class HelpRequestService {
                     .helpRequest(helpRequest)
                     .build();
             helpRequest.setSupportSession(this.supportSessionService.create(supportSession));
-        }else if (status == RequestStatus.CANCELLED){
+        }else if (status == RequestStatus.CANCELLED && helpRequest.getSupportSession()!=null){
             this.supportSessionService.updateHelpStatusById(helpRequest.getSupportSession().getId(),HelpStatus.CANCELLED);
-        }else if (status == RequestStatus.COMPLETED){
+        }else if (status == RequestStatus.COMPLETED && helpRequest.getSupportSession()!=null){
             this.supportSessionService.updateHelpStatusById(helpRequest.getSupportSession().getId(),HelpStatus.FINISHED);
         }
 

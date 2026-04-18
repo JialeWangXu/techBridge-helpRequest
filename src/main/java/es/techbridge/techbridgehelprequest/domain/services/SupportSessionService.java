@@ -31,4 +31,8 @@ public class SupportSessionService {
         return this.supportSessionPersistence.saveSessionMethod(supportSession,id).toSupportSession();
     }
 
+    public void deleteById(UUID id){
+        this.supportSessionPersistence.deleteById(id);
+    }
+
 }

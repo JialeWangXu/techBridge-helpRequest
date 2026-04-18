@@ -13,4 +13,6 @@ public interface SupportSessionPersistence {
     SupportSessionEntity updateHelpStatusById(HelpStatus helpStatus, UUID uuid);
 
     SupportSessionEntity saveSessionMethod(SupportSession session, UUID id);
+
+    void deleteById(UUID id);
 }

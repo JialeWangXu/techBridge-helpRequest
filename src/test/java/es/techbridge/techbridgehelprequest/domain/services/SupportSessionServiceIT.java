@@ -3,9 +3,7 @@ package es.techbridge.techbridgehelprequest.domain.services;
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.*;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import org.junit.jupiter.api.Test;
@@ -163,5 +161,20 @@ public class SupportSessionServiceIT {
         assertThatThrownBy(() -> this.supportSessionService.saveSessionMethod(partialUpdate, id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining(id.toString());
+    }
+
+    @Test
+    void deleteById() {
+        HelpRequestEntity help = this.helpRequestRepository.findById(UUID.fromString("11111111-2222-3333-4444-555566660001")).get();
+        SupportSessionEntity sessionToDelete = SupportSessionEntity.builder()
+                .id(UUID.fromString("11111111-2222-3333-4444-555566661004"))
+                .status(HelpStatus.FINISHED)
+                .helpRequest(help)
+                .build();
+        this.supportSessionRepository.save(sessionToDelete);
+
+        this.supportSessionService.deleteById(UUID.fromString("11111111-2222-3333-4444-555566661004"));
+
+        assertThat(this.helpRequestRepository.existsById(UUID.fromString("11111111-2222-3333-4444-555566661004"))).isFalse();
     }
 }

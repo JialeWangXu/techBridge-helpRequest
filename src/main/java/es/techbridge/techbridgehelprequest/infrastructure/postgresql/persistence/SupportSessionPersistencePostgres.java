@@ -60,4 +60,11 @@ public class SupportSessionPersistencePostgres implements SupportSessionPersiste
         return entity;
     }
 
+    @Override
+    public void deleteById(UUID id) {
+        if(this.supportSessionRepository.existsById(id)){
+            this.supportSessionRepository.deleteById(id);
+        }
+    }
+
 }
