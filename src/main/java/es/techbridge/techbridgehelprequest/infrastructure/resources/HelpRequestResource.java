@@ -24,6 +24,7 @@ public class HelpRequestResource {
     public static final String SENIOR_MY = "/senior/my";
     public static final String VOLUNTEER_MY = "/volunteer/my";
     public static final String AVAILABLE = "/available";
+    public static final String SAVEAITUTORIAL_ID = "/saveAiTutorial/{id}";
     private final HelpRequestService helpRequestService;
 
     @Autowired
@@ -75,6 +76,12 @@ public class HelpRequestResource {
     public List<HelpRequest> getAllVolunteersHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
         String email = jwt.getSubject();
         return this.helpRequestService.getVolunteerHelpRequestsByEmail(email);
+    }
+
+    @PutMapping(SAVEAITUTORIAL_ID)
+    @PreAuthorize("hasRole('SENIOR')")
+    public void saveAiTutorialId(@PathVariable UUID id, @RequestBody UUID aiTutorialId){
+        this.helpRequestService.saveAiTutorialId(id,aiTutorialId);
     }
 
 }

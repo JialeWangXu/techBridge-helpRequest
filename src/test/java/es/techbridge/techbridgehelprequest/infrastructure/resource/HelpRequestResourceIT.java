@@ -317,4 +317,20 @@ class HelpRequestResourceIT {
                 .extracting(SupportSessionEntity::getStatus)
                 .isEqualTo(HelpStatus.FINISHED);
     }
+
+    @Test
+    void whenSaveAiTutorialId_thenUpdateTutorialId() throws Exception {
+        String jsonRequest= "\"33333333-bbbb-cccc-dddd-eeeeffff0002\"";
+        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS +HelpRequestResource.SAVEAITUTORIAL_ID, REQUEST_ID_IN_PROGRESS)
+                        .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
+                                .authorities(() -> "ROLE_SENIOR"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(status().isOk());
+
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_IN_PROGRESS))
+                .get()
+                .extracting(HelpRequestEntity::getAiTutorialId)
+                .isEqualTo(UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0002"));
+    }
 }

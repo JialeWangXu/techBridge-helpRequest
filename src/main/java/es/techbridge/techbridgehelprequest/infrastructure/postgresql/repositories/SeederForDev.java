@@ -18,6 +18,7 @@ public class SeederForDev {
     private final HelpRequestRepository helpRequestRepository;
     private final UUID seniorId = UUID.fromString("11111111-1111-1111-1111-111111111111");
     private final UUID volunteerId = UUID.fromString("22222222-2222-2222-2222-222222222222");
+    private final UUID tutorialId = UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0001");
 
 
     public SeederForDev(SupportSessionRepository supportSessionRepository, HelpRequestRepository helpRequestRepository) {
@@ -47,7 +48,7 @@ public class SeederForDev {
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660001"))
                         .title("Configuración de Tablet nueva")
                         .description("Necesito ayuda para instalar WhatsApp y el correo en una Samsung Tab.")
-                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660001"))
+                        .aiTutorialId(tutorialId)
                         .status(RequestStatus.FINDING_VOLUNTEER)
                         .seniorId(seniorId)
                         .build(),
@@ -56,7 +57,7 @@ public class SeederForDev {
                         .title("Problemas con la App del Banco")
                         .description("No consigo acceder a mi cuenta, me da error de credenciales.")
                         .status(RequestStatus.IN_PROGRESS)
-                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660000"))
+                        .aiTutorialId(tutorialId)
                         .seniorId(seniorId)
                         .volunteerId(volunteerId) // Ya tiene un voluntario asignado
                         .createdAt(LocalDateTime.now().minusDays(1))
@@ -65,7 +66,7 @@ public class SeederForDev {
                         .id(UUID.fromString("11111111-2222-3333-4444-555566660003"))
                         .title("Videollamada con familiares")
                         .description("Quiero aprender a usar Zoom para hablar con mis nietos en el extranjero.")
-                        .aiTutorialId(UUID.fromString("11111111-7777-3333-4444-555566660002"))
+                        .aiTutorialId(tutorialId)
                         .status(RequestStatus.COMPLETED)
                         .seniorId(seniorId)
                         .volunteerId(volunteerId)
@@ -85,7 +86,7 @@ public class SeederForDev {
                         .status(HelpStatus.ACTIVE)
                         .recordingConsent(true)
                         .s3RecordingUrl("https://s3.aws.com/techbridge/session001.mp4")
-                        .meetingUrl("http://meeting.test.com")
+                        .meetingUrl("https://meeting.test.com")
                         .volunteerNotes("El senior progresa adecuadamente con la tablet.")
                         .helpRequest(requests[1]) // Vinculada a "App del Banco"
                         .build(),

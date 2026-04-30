@@ -86,4 +86,12 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
         return this.helpRequestRepository.findAllByVolunteerId(volunteerId);
     }
 
+    @Override
+    public void saveAiTutorialId(UUID id, UUID aiTutorialId) {
+        HelpRequestEntity helpRequestEntity = this.helpRequestRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No Help request found with the ID: "+id));
+        helpRequestEntity.setAiTutorialId(aiTutorialId);
+        this.helpRequestRepository.save(helpRequestEntity);
+    }
+
 }
