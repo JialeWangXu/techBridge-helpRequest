@@ -25,4 +25,6 @@ public interface HelpRequestPersistence {
 
     List<HelpRequestEntity> getHelpRequestsByVolunteerId(UUID volunteerId);
 
+    void saveAiTutorialId(UUID id, UUID aiTutorialId);
+
 }

@@ -116,4 +116,8 @@ public class HelpRequestService {
                 })
                 .toList();
     }
+
+    public void saveAiTutorialId(UUID id, UUID aiTutorialId){
+        this.helpRequestPersistence.saveAiTutorialId(id,aiTutorialId);
+    }
 }

@@ -302,4 +302,25 @@ class HelpRequestServiceIT {
                 .extracting(SupportSessionEntity::getStatus)
                 .isEqualTo(HelpStatus.FINISHED);
     }
+
+    @Test
+    void saveAiTutorialId_then_update_ai_tutorial_id(){
+        UUID aiTutorialId =UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0002");
+        this.helpRequestService.saveAiTutorialId(
+                REQUEST_ID_FINDING_VOLUNTEER, aiTutorialId);
+
+        assertThat(this.helpRequestRepository.findById(REQUEST_ID_FINDING_VOLUNTEER))
+                .get()
+                .extracting(HelpRequestEntity::getAiTutorialId)
+                .isEqualTo(aiTutorialId);
+    }
+
+    @Test
+    void saveAiTutorialIdNotFound() {
+        UUID id = UUID.fromString("11111111-2222-3333-4444-777866660010");
+
+        assertThatThrownBy(() -> this.helpRequestService.saveAiTutorialId(id, UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0003")))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessageContaining(id.toString());
+    }
 }
