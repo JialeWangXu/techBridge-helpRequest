@@ -1,8 +1,8 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.*;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;

@@ -1,9 +1,9 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.UserDto;
-import es.techbridge.techbridgehelprequest.domain.model.UserRole;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;

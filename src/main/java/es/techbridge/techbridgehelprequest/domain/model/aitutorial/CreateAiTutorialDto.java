@@ -1,22 +1,19 @@
-package es.techbridge.techbridgehelprequest.domain.model;
+package es.techbridge.techbridgehelprequest.domain.model.aitutorial;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
 import java.util.UUID;
 
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AiTutorialDto {
+public class CreateAiTutorialDto {
 
-    private UUID id;
     private String title;
-    private String generalDescription;
-    private List<StepDto> steps;
-
+    private String description;
+    private UUID helpRequestId;
 }

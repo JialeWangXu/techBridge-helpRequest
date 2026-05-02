@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.model;
+package es.techbridge.techbridgehelprequest.domain.model.user;
 
 import java.util.Arrays;
 import java.util.Optional;

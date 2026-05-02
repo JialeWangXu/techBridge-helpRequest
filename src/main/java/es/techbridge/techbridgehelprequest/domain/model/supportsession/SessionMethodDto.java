@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.model;
+package es.techbridge.techbridgehelprequest.domain.model.supportsession;
 
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import lombok.AllArgsConstructor;

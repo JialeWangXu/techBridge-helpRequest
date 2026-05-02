@@ -1,8 +1,9 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities;
 
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
-import es.techbridge.techbridgehelprequest.domain.model.UserDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -54,11 +55,15 @@ public class HelpRequestEntity extends BaseAuditEntity{
 
         SupportSession session =null;
         UserDto volunteer= null;
+        AiTutorialDto aiTutorialDto = null;
         if(this.volunteerId !=null){
             volunteer = UserDto.builder().id(this.volunteerId).build();
         }
         if(this.supportSession!=null){
             session = this.supportSession.toSupportSession();
+        }
+        if(this.aiTutorialId!=null){
+            aiTutorialDto = AiTutorialDto.builder().id(this.aiTutorialId).build();
         }
 
         return HelpRequest.builder()
@@ -67,6 +72,7 @@ public class HelpRequestEntity extends BaseAuditEntity{
                 .volunteer(volunteer)
                 .title(this.title)
                 .description(this.description)
+                .aiTutorial(aiTutorialDto)
                 .status(this.status)
                 .updatedAt(this.getUpdatedAt())
                 .createdAt(this.getCreatedAt())

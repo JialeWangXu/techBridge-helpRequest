@@ -1,9 +1,8 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.persistence.SupportSessionPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
-import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

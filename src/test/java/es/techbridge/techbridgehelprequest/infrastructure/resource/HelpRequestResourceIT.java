@@ -1,7 +1,7 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
-import es.techbridge.techbridgehelprequest.domain.model.UserDto;
-import es.techbridge.techbridgehelprequest.domain.model.UserRole;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;

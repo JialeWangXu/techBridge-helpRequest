@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.model;
+package es.techbridge.techbridgehelprequest.domain.model.aitutorial;
 
 
 import lombok.AllArgsConstructor;

@@ -1,7 +1,7 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.RequestStatusDto;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.RequestStatusDto;
 import es.techbridge.techbridgehelprequest.domain.services.HelpRequestService;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
@@ -34,9 +34,9 @@ public class HelpRequestResource {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SENIOR')")
-    public void create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody HelpRequest helpRequest){
+    public HelpRequest create(@AuthenticationPrincipal Jwt jwt, @Valid @RequestBody HelpRequest helpRequest){
         String email = jwt.getSubject();
-        this.helpRequestService.create(email,helpRequest);
+        return this.helpRequestService.create(email,helpRequest);
     }
 
     @GetMapping(SENIOR_MY)

@@ -1,5 +1,8 @@
-package es.techbridge.techbridgehelprequest.domain.model;
+package es.techbridge.techbridgehelprequest.domain.model.helprequest;
 
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import lombok.*;
 
