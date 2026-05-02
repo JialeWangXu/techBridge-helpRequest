@@ -1,6 +1,6 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities;
 
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

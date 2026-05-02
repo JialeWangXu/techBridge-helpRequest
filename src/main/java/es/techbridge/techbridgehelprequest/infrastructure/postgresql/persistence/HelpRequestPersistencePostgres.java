@@ -1,7 +1,7 @@
 package es.techbridge.techbridgehelprequest.infrastructure.postgresql.persistence;
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
@@ -24,9 +24,10 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     }
 
     @Override
-    public void create(HelpRequest helpRequest) {
+    public HelpRequestEntity create(HelpRequest helpRequest) {
         HelpRequestEntity helpRequestEntity = new HelpRequestEntity(helpRequest);
         this.helpRequestRepository.save(helpRequestEntity);
+        return helpRequestEntity;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
-import es.techbridge.techbridgehelprequest.domain.model.SessionMethodDto;
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.services.SupportSessionService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;

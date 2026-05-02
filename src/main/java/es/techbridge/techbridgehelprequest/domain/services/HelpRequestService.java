@@ -1,9 +1,12 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
-import es.techbridge.techbridgehelprequest.domain.model.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.model.SupportSession;
-import es.techbridge.techbridgehelprequest.domain.model.UserDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
+import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
+import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
@@ -20,21 +23,33 @@ public class HelpRequestService {
     private final HelpRequestPersistence helpRequestPersistence;
     private final UserWebClient userWebClient;
     private final SupportSessionService supportSessionService;
+    private final AiTutorialWebClient aiTutorialWebClient;
 
     @Autowired
     public HelpRequestService(HelpRequestPersistence helpRequestPersistence,
-                              UserWebClient userWebClient, SupportSessionService supportSessionService) {
+                              UserWebClient userWebClient, SupportSessionService supportSessionService, AiTutorialWebClient aiTutorialWebClient) {
         this.helpRequestPersistence = helpRequestPersistence;
         this.userWebClient = userWebClient;
         this.supportSessionService = supportSessionService;
+        this.aiTutorialWebClient = aiTutorialWebClient;
     }
 
-    public void create(String email, HelpRequest helpRequest){
+    public HelpRequest create(String email, HelpRequest helpRequest){
         // Buscar senior
         UserDto senior =this.userWebClient.readByEmail(email);
         helpRequest.setSenior(senior);
         helpRequest.setId(UUID.randomUUID());
-        this.helpRequestPersistence.create(helpRequest);
+        HelpRequestEntity helpRequestEntity= this.helpRequestPersistence.create(helpRequest);
+        AiTutorialDto aiTutorial = this.aiTutorialWebClient.create(
+                CreateAiTutorialDto.builder()
+                        .title(helpRequest.getTitle())
+                        .description(helpRequest.getDescription())
+                        .helpRequestId(helpRequestEntity.getId())
+                        .build()
+        );
+        this.helpRequestPersistence.saveAiTutorialId(helpRequestEntity.getId(),aiTutorial.getId());
+        helpRequestEntity.setAiTutorialId(aiTutorial.getId());
+        return helpRequestEntity.toHelpRequest();
     }
 
     public List<HelpRequest> getSeniorHelpRequestsByEmail(String email){
@@ -55,6 +70,10 @@ public class HelpRequestService {
             helpRequest.setVolunteer(volunteer);
         }else{
             helpRequest.setVolunteer(null);
+        }
+        if(helpRequest.getAiTutorial()!=null && helpRequest.getAiTutorial().getId()!=null){
+            AiTutorialDto aiTutorialDto = this.aiTutorialWebClient.getById(helpRequest.getAiTutorial().getId());
+            helpRequest.setAiTutorial(aiTutorialDto);
         }
         UserDto senior = this.userWebClient.readById(helpRequest.getSenior().getId());
         helpRequest.setSenior(senior);
