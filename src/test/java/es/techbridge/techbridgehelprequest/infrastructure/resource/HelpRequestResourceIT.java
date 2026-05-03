@@ -1,7 +1,11 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.StepDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
+import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
@@ -22,6 +26,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,6 +66,8 @@ class HelpRequestResourceIT {
 
     @MockitoBean
     private UserWebClient userWebClient;
+    @MockitoBean
+    private AiTutorialWebClient aiTutorialWebClient;
 
     @BeforeEach
     void setUp() {
@@ -89,6 +96,17 @@ class HelpRequestResourceIT {
                     }
                     return senior;
                 });
+        AiTutorialDto aiTutorialDto = AiTutorialDto.builder()
+                .id(UUID.randomUUID())
+                .title("Testing1")
+                .generalDescription("Testing")
+                .steps(List.of(
+                        new StepDto(1, "Test", "Icono Azul")
+                )).build();
+        BDDMockito.given(this.aiTutorialWebClient.create(any(CreateAiTutorialDto.class)))
+                .willReturn(aiTutorialDto);
+        BDDMockito.given(this.aiTutorialWebClient.getById(any(UUID.class)))
+                .willReturn(aiTutorialDto);
     }
 
     @Test
