@@ -1,9 +1,13 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
+import es.techbridge.techbridgehelprequest.domain.model.aitutorial.StepDto;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
+import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
 import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
@@ -52,6 +56,9 @@ class HelpRequestServiceIT {
     @MockitoBean
     private UserWebClient userWebClient;
 
+    @MockitoBean
+    private AiTutorialWebClient aiTutorialWebClient;
+
     private UserDto senior;
     private UserDto volunteer;
 
@@ -82,6 +89,18 @@ class HelpRequestServiceIT {
                     }
                     return this.senior;
                 });
+
+        AiTutorialDto aiTutorialDto = AiTutorialDto.builder()
+                .id(UUID.randomUUID())
+                .title("Testing1")
+                .generalDescription("Testing")
+                .steps(List.of(
+                        new StepDto(1, "Test", "Icono Azul")
+                )).build();
+        BDDMockito.given(this.aiTutorialWebClient.create(any(CreateAiTutorialDto.class)))
+                .willReturn(aiTutorialDto);
+        BDDMockito.given(this.aiTutorialWebClient.getById(any(UUID.class)))
+                .willReturn(aiTutorialDto);
     }
 
     @Test
@@ -91,7 +110,6 @@ class HelpRequestServiceIT {
                 .description("Testing1")
                 .status(RequestStatus.OPEN)
                 .build();
-
         this.helpRequestService.create(SENIOR_EMAIL, helpRequest);
 
         List<HelpRequestEntity> helpRequestEntities = this.helpRequestRepository.findBySeniorId(this.senior.getId());
@@ -110,9 +128,7 @@ class HelpRequestServiceIT {
     void getSeniorHelpRequestsByEmail() {
         List<HelpRequest> result = this.helpRequestService.getSeniorHelpRequestsByEmail(SENIOR_EMAIL);
 
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(3);
-        assertThat(result)
+        assertThat(result).isNotNull().hasSize(3)
                 .extracting(HelpRequest::getId)
                 .containsExactlyInAnyOrder(
                         REQUEST_ID_FINDING_VOLUNTEER,
@@ -131,9 +147,7 @@ class HelpRequestServiceIT {
 
         List<HelpRequest> result = this.helpRequestService.getVolunteerHelpRequestsByEmail(VOLUNTEER_EMAIL);
 
-        assertThat(result).isNotNull();
-        assertThat(result).hasSize(2);
-        assertThat(result)
+        assertThat(result).isNotNull().hasSize(2)
                 .extracting(HelpRequest::getId)
                 .containsExactlyInAnyOrder(
                         REQUEST_ID_IN_PROGRESS,
@@ -318,8 +332,8 @@ class HelpRequestServiceIT {
     @Test
     void saveAiTutorialIdNotFound() {
         UUID id = UUID.fromString("11111111-2222-3333-4444-777866660010");
-
-        assertThatThrownBy(() -> this.helpRequestService.saveAiTutorialId(id, UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0003")))
+        UUID tutorialId = UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0003");
+        assertThatThrownBy(() -> this.helpRequestService.saveAiTutorialId(id, tutorialId))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining(id.toString());
     }
