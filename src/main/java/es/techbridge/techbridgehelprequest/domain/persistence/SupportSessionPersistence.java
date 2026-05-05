@@ -4,6 +4,7 @@ import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSe
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public interface SupportSessionPersistence {
@@ -12,7 +13,9 @@ public interface SupportSessionPersistence {
 
     SupportSessionEntity updateHelpStatusById(HelpStatus helpStatus, UUID uuid);
 
-    SupportSessionEntity saveSessionMethod(SupportSession session, UUID id);
+    SupportSessionEntity updateSupportSession(SupportSession session, UUID id);
+
+    SupportSessionEntity getById(UUID id);
 
     void deleteById(UUID id);
 }

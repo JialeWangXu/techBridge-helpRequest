@@ -1,5 +1,6 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
+import es.techbridge.techbridgehelprequest.domain.services.S3Service;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
@@ -9,14 +10,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,6 +42,9 @@ class SupportSessionResourceIT {
 
     @Autowired
     private SupportSessionRepository supportSessionRepository;
+
+    @MockitoBean
+    private S3Service s3Service;
 
     @Test
     void whenUpdateSupportSession_thenOnlyNonNullFieldsAreUpdated() throws Exception {
@@ -116,5 +127,37 @@ class SupportSessionResourceIT {
                 .get()
                 .extracting(SupportSessionEntity::getSessionMethod)
                 .isEqualTo(SessionMethods.ONLINE_MEETING);
+    }
+
+    @Test
+    void whenVolunteerUploadsFile_thenReturns200() throws Exception {
+        // Creamos un archivo simulado
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test.pdf",
+                MediaType.MEDIA_TYPE_WILDCARD,
+                "contenido".getBytes()
+        );
+
+        // Simulamos el ID de la sesión
+        UUID sessionId = UUID.randomUUID();
+
+        // MockMvc para Multipart
+        this.mockMvc.perform(multipart(SupportSessionResource.SUPPORTSESSION + "/" + sessionId)
+                        .file(file)
+                        .with(jwt().authorities(() -> "ROLE_VOLUNTEER"))) // Tiene el rol correcto
+                .andExpect(status().isOk());
+
+    }
+
+    @Test
+    void whenSeniorTriesToUploadFile_thenReturns403() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "text/plain", "abc".getBytes());
+        UUID sessionId = UUID.randomUUID();
+
+        this.mockMvc.perform(multipart(SupportSessionResource.SUPPORTSESSION + "/" + sessionId)
+                        .file(file)
+                        .with(jwt().authorities(() -> "ROLE_SENIOR"))) // Rol incorrecto
+                .andExpect(status().isForbidden());
     }
 }

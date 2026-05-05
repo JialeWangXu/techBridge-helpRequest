@@ -29,3 +29,8 @@ eureka:
   instance:
     leaseRenewalIntervalInSeconds: 0
     leaseExpirationDurationInSeconds: 0
+
+aws:
+  s3:
+    bucket-name: techbridge-test-s3
+    region: eu-west-1

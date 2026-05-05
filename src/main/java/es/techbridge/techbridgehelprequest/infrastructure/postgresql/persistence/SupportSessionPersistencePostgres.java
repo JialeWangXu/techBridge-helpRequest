@@ -48,7 +48,7 @@ public class SupportSessionPersistencePostgres implements SupportSessionPersiste
     }
 
     @Override
-    public SupportSessionEntity saveSessionMethod(SupportSession session, UUID id) {
+    public SupportSessionEntity updateSupportSession(SupportSession session, UUID id) {
 
         SupportSessionEntity entity = this.supportSessionRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("No support session found with ID: "+id));
@@ -60,10 +60,17 @@ public class SupportSessionPersistencePostgres implements SupportSessionPersiste
     }
 
     @Override
+    public SupportSessionEntity getById(UUID id) {
+        return this.supportSessionRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("No support session found with corresponding ID: "+id));
+    }
+
+    @Override
     public void deleteById(UUID id) {
         if(this.supportSessionRepository.existsById(id)){
             this.supportSessionRepository.deleteById(id);
         }
     }
+
 
 }

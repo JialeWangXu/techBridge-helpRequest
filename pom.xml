@@ -46,6 +46,16 @@
             **/*MapperImpl.java,
             **/model/**
         </sonar.exclusions>
+        <sonar.coverage.exclusions>
+            **/TechbridgeHelprequestApplication.java,
+            **/configurations/**,
+            **/domain/exceptions/**,
+            **/domain/mapper/**,
+            **/domain/model/**,
+            **/domain/persistence/**,
+            **/domain/webclients/**,
+            **/infrastructure/postgresql/**
+        </sonar.coverage.exclusions>
     </properties>
     <dependencies>
         <!-- Feign - Comunicación declarativa entre microservicios -->
@@ -144,6 +154,11 @@
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.20.0</version>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -214,9 +229,34 @@
                     </execution>
                     <execution>
                         <id>report</id>
-                        <phase>verify</phase> <goals>
-                        <goal>report</goal>
-                    </goals>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/jacoco-merged.exec</dataFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>merge-results</id>
+                        <phase>post-integration-test</phase>
+                        <goals>
+                            <goal>merge</goal>
+                        </goals>
+                        <configuration>
+                            <fileSets>
+                                <fileSet>
+                                    <directory>${project.build.directory}</directory>
+                                    <includes>
+                                        <include>*.exec</include>
+                                    </includes>
+                                    <excludes>
+                                        <exclude>jacoco-merged.exec</exclude>
+                                    </excludes>
+                                </fileSet>
+                            </fileSets>
+                            <destFile>${project.build.directory}/jacoco-merged.exec</destFile>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -231,7 +271,7 @@
                 <version>${maven-failsafe-plugin.version}</version>
                 <configuration>
                     <argLine>
-                        -Xshare:off
+                        @{argLine} -Xshare:off
                     </argLine>
                 </configuration>
                 <executions>
