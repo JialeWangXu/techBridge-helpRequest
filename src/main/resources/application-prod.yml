@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_ENDPOINT}:5432/help_request_db
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+aws:
+  s3:
+    bucket-name: techbridge-s3
+    region: eu-west-1
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${EUREKA_USER}:${EUREKA_PASSWORD}@techbridge-eureka:8761/eureka/
+  instance:
+    prefer-ip-address: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
