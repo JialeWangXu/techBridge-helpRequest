@@ -7,8 +7,8 @@ import es.techbridge.techbridgehelprequest.domain.model.aitutorial.StepDto;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
-import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
-import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.AiTutorialWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
@@ -79,8 +79,10 @@ class HelpRequestServiceIT {
                 .role(UserRole.VOLUNTEER)
                 .build();
 
-        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+        BDDMockito.given(this.userWebClient.readByEmail(SENIOR_EMAIL))
                 .willReturn(this.senior);
+        BDDMockito.given(this.userWebClient.readByEmail(VOLUNTEER_EMAIL))
+                .willReturn(this.volunteer);
         BDDMockito.given(this.userWebClient.readById(any(UUID.class)))
                 .willAnswer(invocation -> {
                     UUID id = invocation.getArgument(0);
@@ -336,5 +338,17 @@ class HelpRequestServiceIT {
         assertThatThrownBy(() -> this.helpRequestService.saveAiTutorialId(id, tutorialId))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining(id.toString());
+    }
+
+    @Test
+    void checkVolunteerCurrentProgress(){
+        assertThat(this.helpRequestService.checkVolunteerCurrentProgress(VOLUNTEER_EMAIL))
+                .isFalse();
+    }
+
+    @Test
+    void getVolunteerCurrentProgress(){
+        assertThat(this.helpRequestService.getVolunteerCurrentProgress(VOLUNTEER_EMAIL))
+                .isEqualTo(1);
     }
 }

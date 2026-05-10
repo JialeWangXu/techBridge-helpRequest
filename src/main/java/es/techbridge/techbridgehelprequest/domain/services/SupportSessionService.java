@@ -1,9 +1,10 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
+import es.techbridge.techbridgehelprequest.application.port.in.SupportSessionUseCases;
 import es.techbridge.techbridgehelprequest.domain.exceptions.FailUploadResourceException;
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
-import es.techbridge.techbridgehelprequest.domain.persistence.SupportSessionPersistence;
+import es.techbridge.techbridgehelprequest.application.port.out.persistence.SupportSessionPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,15 +14,15 @@ import java.io.IOException;
 import java.util.UUID;
 
 @Service
-public class SupportSessionService {
+public class SupportSessionService implements SupportSessionUseCases {
 
     private final SupportSessionPersistence supportSessionPersistence;
-    private final S3Service s3Service;
+    private final SupportResourceService supportResourceService;
 
     @Autowired
-    public SupportSessionService(SupportSessionPersistence supportSessionPersistence, S3Service s3Service) {
+    public SupportSessionService(SupportSessionPersistence supportSessionPersistence, SupportResourceService supportResourceService) {
         this.supportSessionPersistence = supportSessionPersistence;
-        this.s3Service = s3Service;
+        this.supportResourceService = supportResourceService;
     }
 
     public SupportSession create(SupportSession supportSession){
@@ -42,7 +43,7 @@ public class SupportSessionService {
 
     public void uploadResource(UUID id, MultipartFile file){
         try{
-            String resource = this.s3Service.uploadResource(id.toString(),file);
+            String resource = this.supportResourceService.uploadSupportSessionResource(id.toString(),file);
             if(resource!=null && !resource.isEmpty()){
                 SupportSession supportSession = SupportSession.builder()
                         .s3RecordingUrl(resource)
@@ -57,7 +58,7 @@ public class SupportSessionService {
     public String downloadResource(UUID id){
         SupportSession supportSession = this.supportSessionPersistence.getById(id).toSupportSession();
         if(supportSession.getS3RecordingUrl()!=null){
-            return this.s3Service.downLoadResource(supportSession.getS3RecordingUrl());
+            return this.supportResourceService.downLoadSupportSessionResource(supportSession.getS3RecordingUrl());
         }else{
             throw new NotFoundException("No resource found for the support session with ID: "+id);
         }

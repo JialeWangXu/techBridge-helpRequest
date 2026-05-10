@@ -6,11 +6,8 @@ import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSe
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.*;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.BDDMockito;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
@@ -25,14 +22,11 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 @Transactional
 @ActiveProfiles("test")
-public class SupportSessionServiceIT {
+class SupportSessionServiceIT {
 
     private static final UUID REQUEST_ID_FINDING_VOLUNTEER = UUID.fromString("11111111-2222-3333-4444-555566660001");
     private static final UUID SUPPORT_SESSION_ID_IN_PROGRESS = UUID.fromString("22222222-bbbb-cccc-dddd-eeeeffff0003");
@@ -47,7 +41,7 @@ public class SupportSessionServiceIT {
     private HelpRequestRepository helpRequestRepository;
 
     @MockitoBean
-    private S3Service s3Service;
+    private SupportResourceService supportResourceService;
 
     @Test
     void create() {
@@ -199,7 +193,7 @@ public class SupportSessionServiceIT {
                 "file", "original.pdf", "application/pdf", "contenido-binario".getBytes()
         );
 
-        BDDMockito.given(s3Service.uploadResource(any(String.class),any(MultipartFile.class))).willReturn(SUPPORT_SESSION_ID_IN_PROGRESS.toString());
+        BDDMockito.given(supportResourceService.uploadSupportSessionResource(any(String.class),any(MultipartFile.class))).willReturn(SUPPORT_SESSION_ID_IN_PROGRESS.toString());
         this.supportSessionService.uploadResource(SUPPORT_SESSION_ID_IN_PROGRESS,file);
 
         assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS).get().getS3RecordingUrl())
@@ -209,7 +203,7 @@ public class SupportSessionServiceIT {
 
     @Test
     void downloadResource(){
-        BDDMockito.given(s3Service.downLoadResource(any(String.class))).willReturn(SUPPORT_SESSION_ID_IN_PROGRESS.toString());
+        BDDMockito.given(supportResourceService.downLoadSupportSessionResource(any(String.class))).willReturn(SUPPORT_SESSION_ID_IN_PROGRESS.toString());
         String resul = this.supportSessionService.downloadResource(SUPPORT_SESSION_ID_IN_PROGRESS);
         assertThat(resul).isNotEmpty()
                 .isEqualTo(SUPPORT_SESSION_ID_IN_PROGRESS.toString());

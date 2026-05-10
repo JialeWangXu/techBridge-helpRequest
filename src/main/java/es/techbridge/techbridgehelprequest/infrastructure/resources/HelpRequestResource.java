@@ -24,7 +24,9 @@ public class HelpRequestResource {
     public static final String SENIOR_MY = "/senior/my";
     public static final String VOLUNTEER_MY = "/volunteer/my";
     public static final String AVAILABLE = "/available";
-    public static final String SAVEAITUTORIAL_ID = "/saveAiTutorial/{id}";
+    public static final String SAVE_AI_TUTORIAL_ID = "/saveAiTutorial/{id}";
+    public static final String VOLUNTEER_CHECK="/inProgress/check";
+    public static final String VOLUNTEER_IN_PROGRESS_COUNT="/inProgress/count";
     private final HelpRequestService helpRequestService;
 
     @Autowired
@@ -78,10 +80,22 @@ public class HelpRequestResource {
         return this.helpRequestService.getVolunteerHelpRequestsByEmail(email);
     }
 
-    @PutMapping(SAVEAITUTORIAL_ID)
+    @PutMapping(SAVE_AI_TUTORIAL_ID)
     @PreAuthorize("hasRole('SENIOR')")
     public void saveAiTutorialId(@PathVariable UUID id, @RequestBody UUID aiTutorialId){
         this.helpRequestService.saveAiTutorialId(id,aiTutorialId);
     }
 
+    @GetMapping(VOLUNTEER_CHECK)
+    @PreAuthorize("hasRole('VOLUNTEER')")
+    public boolean checkVolunteerInProgressLimit(@AuthenticationPrincipal Jwt jwt){
+        return this.helpRequestService.checkVolunteerCurrentProgress(jwt.getSubject());
+    }
+
+
+    @GetMapping(VOLUNTEER_IN_PROGRESS_COUNT)
+    @PreAuthorize("hasRole('VOLUNTEER')")
+    public Long getVolunteerInProgressCount(@AuthenticationPrincipal Jwt jwt){
+        return this.helpRequestService.getVolunteerCurrentProgress(jwt.getSubject());
+    }
 }

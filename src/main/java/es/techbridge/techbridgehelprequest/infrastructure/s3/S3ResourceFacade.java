@@ -1,7 +1,8 @@
-package es.techbridge.techbridgehelprequest.domain.services;
+package es.techbridge.techbridgehelprequest.infrastructure.s3;
 
+import es.techbridge.techbridgehelprequest.application.port.out.resourceFacade.ResourceFacade;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -13,20 +14,20 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import java.io.IOException;
 import java.time.Duration;
 
-@Service
-public class S3Service {
-
+@Component
+public class S3ResourceFacade implements ResourceFacade {
     private final S3Client s3Client;
     private final S3Presigner s3Presigner;
 
     @Value("${aws.s3.bucket-name}")
     private String bucketName;
 
-    public S3Service(S3Client s3Client, S3Presigner s3Presigner) {
+    public S3ResourceFacade(S3Client s3Client, S3Presigner s3Presigner) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
     }
 
+    @Override
     public String uploadResource(String key, MultipartFile file) throws IOException {
         PutObjectRequest put = PutObjectRequest.builder()
                 .bucket(bucketName)
@@ -39,7 +40,8 @@ public class S3Service {
         return key;
     }
 
-    public String downLoadResource(String key){
+    @Override
+    public String downLoadResource(String key) {
         GetObjectRequest getObjectRequest = GetObjectRequest.builder()
                 .bucket(bucketName)
                 .key(key)
@@ -52,5 +54,4 @@ public class S3Service {
 
         return this.s3Presigner.presignGetObject(presignRequest).url().toString();
     }
-
 }

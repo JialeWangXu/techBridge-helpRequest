@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.persistence;
+package es.techbridge.techbridgehelprequest.application.port.out.persistence;
 
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;

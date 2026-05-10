@@ -24,4 +24,6 @@ public interface HelpRequestRepository extends JpaRepository<HelpRequestEntity, 
     List<HelpRequestEntity> findAllByStatus(RequestStatus status);
 
     List<HelpRequestEntity> findAllByVolunteerId(UUID volunteerId);
+
+    Long countByVolunteerIdAndStatus(UUID volunteerId,RequestStatus status);
 }

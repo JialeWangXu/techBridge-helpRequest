@@ -70,3 +70,7 @@ feign:
       default:
         connectTimeout: 5000
         readTimeout: 60000
+
+app:
+  request-limit:
+    volunteer-in-progress-limit: ${VOLUNTEER_LIMIT:3}

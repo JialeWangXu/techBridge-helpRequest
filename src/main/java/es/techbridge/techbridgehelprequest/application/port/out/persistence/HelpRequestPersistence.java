@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.persistence;
+package es.techbridge.techbridgehelprequest.application.port.out.persistence;
 
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
@@ -27,4 +27,5 @@ public interface HelpRequestPersistence {
 
     void saveAiTutorialId(UUID id, UUID aiTutorialId);
 
+    Long countVolunteerInProgressRequest(UUID id);
 }

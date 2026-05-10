@@ -5,8 +5,8 @@ import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutor
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.StepDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserRole;
-import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
-import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.AiTutorialWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
@@ -339,7 +339,7 @@ class HelpRequestResourceIT {
     @Test
     void whenSaveAiTutorialId_thenUpdateTutorialId() throws Exception {
         String jsonRequest= "\"33333333-bbbb-cccc-dddd-eeeeffff0002\"";
-        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS +HelpRequestResource.SAVEAITUTORIAL_ID, REQUEST_ID_IN_PROGRESS)
+        this.mockMvc.perform(put(HelpRequestResource.HELPREQUESTS +HelpRequestResource.SAVE_AI_TUTORIAL_ID, REQUEST_ID_IN_PROGRESS)
                         .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
                                 .authorities(() -> "ROLE_SENIOR"))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -350,5 +350,21 @@ class HelpRequestResourceIT {
                 .get()
                 .extracting(HelpRequestEntity::getAiTutorialId)
                 .isEqualTo(UUID.fromString("33333333-bbbb-cccc-dddd-eeeeffff0002"));
+    }
+
+    @Test
+    void whenCheckVolunteerCurrentProgress_thenReturnResult() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.VOLUNTEER_CHECK)
+                .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                        .authorities(() -> "ROLE_VOLUNTEER"))
+        ).andExpect(status().isOk());
+    }
+
+    @Test
+    void whenGetVolunteerCurrentProgress_thenReturnResult() throws Exception {
+        this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.VOLUNTEER_IN_PROGRESS_COUNT)
+                .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
+                        .authorities(() -> "ROLE_VOLUNTEER"))
+        ).andExpect(status().isOk());
     }
 }

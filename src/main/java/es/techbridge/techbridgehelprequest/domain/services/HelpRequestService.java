@@ -1,29 +1,34 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
+import es.techbridge.techbridgehelprequest.application.port.in.HelpRequestUseCases;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
-import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
-import es.techbridge.techbridgehelprequest.domain.webclients.AiTutorialWebClient;
-import es.techbridge.techbridgehelprequest.domain.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.persistence.HelpRequestPersistence;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.AiTutorialWebClient;
+import es.techbridge.techbridgehelprequest.application.port.out.webclients.UserWebClient;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
 
 @Service
-public class HelpRequestService {
+public class HelpRequestService implements HelpRequestUseCases {
 
     private final HelpRequestPersistence helpRequestPersistence;
     private final UserWebClient userWebClient;
     private final SupportSessionService supportSessionService;
     private final AiTutorialWebClient aiTutorialWebClient;
+
+    @Value("${app.request-limit.volunteer-in-progress-limit}")
+    private Long volunteerInProgressRequestLimit;
 
     @Autowired
     public HelpRequestService(HelpRequestPersistence helpRequestPersistence,
@@ -34,6 +39,7 @@ public class HelpRequestService {
         this.aiTutorialWebClient = aiTutorialWebClient;
     }
 
+    @Override
     public HelpRequest create(String email, HelpRequest helpRequest){
         // Buscar senior
         UserDto senior =this.userWebClient.readByEmail(email);
@@ -52,6 +58,7 @@ public class HelpRequestService {
         return helpRequestEntity.toHelpRequest();
     }
 
+    @Override
     public List<HelpRequest> getSeniorHelpRequestsByEmail(String email){
 
         UserDto senior = this.userWebClient.readByEmail(email);
@@ -63,6 +70,7 @@ public class HelpRequestService {
                 .toList();
     }
 
+    @Override
     public HelpRequest getById(UUID id){
         HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
         if(helpRequest.getVolunteer()!=null&&helpRequest.getVolunteer().getId()!=null){
@@ -79,11 +87,12 @@ public class HelpRequestService {
         helpRequest.setSenior(senior);
         return helpRequest;
     }
-
+    @Override
     public void deleteById(UUID id){
         this.helpRequestPersistence.deleteById(id);
     }
 
+    @Override
     public List<HelpRequest> getAllAvailableHelpRequests(){
         return this.helpRequestPersistence.getAllAvailableHelpRequests()
                 .stream()
@@ -95,6 +104,7 @@ public class HelpRequestService {
 
     }
 
+    @Override
     public HelpRequest updateRequestStatusById(String volunteerEmail, UUID id, RequestStatus status){
         HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
         UUID volunteerId = null;
@@ -124,6 +134,7 @@ public class HelpRequestService {
         return updatedHelpRequest;
     }
 
+    @Override
     public List<HelpRequest> getVolunteerHelpRequestsByEmail(String email){
         UserDto volunteer = this.userWebClient.readByEmail(email);
         return this.helpRequestPersistence.getHelpRequestsByVolunteerId(volunteer.getId())
@@ -136,7 +147,19 @@ public class HelpRequestService {
                 .toList();
     }
 
+    @Override
     public void saveAiTutorialId(UUID id, UUID aiTutorialId){
         this.helpRequestPersistence.saveAiTutorialId(id,aiTutorialId);
+    }
+
+    @Override
+    public boolean checkVolunteerCurrentProgress(String email) {
+        return getVolunteerCurrentProgress(email) >= volunteerInProgressRequestLimit;
+    }
+
+    @Override
+    public long getVolunteerCurrentProgress(String email) {
+        UserDto volunteer = this.userWebClient.readByEmail(email);
+        return this.helpRequestPersistence.countVolunteerInProgressRequest(volunteer.getId());
     }
 }
