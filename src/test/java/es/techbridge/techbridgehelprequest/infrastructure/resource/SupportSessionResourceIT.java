@@ -1,6 +1,6 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
-import es.techbridge.techbridgehelprequest.domain.services.S3Service;
+import es.techbridge.techbridgehelprequest.domain.services.SupportResourceService;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
@@ -19,10 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -44,7 +40,7 @@ class SupportSessionResourceIT {
     private SupportSessionRepository supportSessionRepository;
 
     @MockitoBean
-    private S3Service s3Service;
+    private SupportResourceService supportResourceService;
 
     @Test
     void whenUpdateSupportSession_thenOnlyNonNullFieldsAreUpdated() throws Exception {

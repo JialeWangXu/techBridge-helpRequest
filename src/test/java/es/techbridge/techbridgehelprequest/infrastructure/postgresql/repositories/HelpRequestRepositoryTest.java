@@ -16,7 +16,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
-@ActiveProfiles("test") // Asegúrate de tener un application-test.yml para H2
+@ActiveProfiles("test")
 @Import(SeederForDev.class)
 class HelpRequestRepositoryTest {
 

@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.webclients;
+package es.techbridge.techbridgehelprequest.application.port.out.webclients;
 
 import es.techbridge.techbridgehelprequest.configurations.FeignConfig;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;

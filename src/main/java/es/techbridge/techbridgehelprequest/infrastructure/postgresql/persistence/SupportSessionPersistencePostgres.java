@@ -3,7 +3,7 @@ package es.techbridge.techbridgehelprequest.infrastructure.postgresql.persistenc
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.mapper.SupportSessionMapper;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
-import es.techbridge.techbridgehelprequest.domain.persistence.SupportSessionPersistence;
+import es.techbridge.techbridgehelprequest.application.port.out.persistence.SupportSessionPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;

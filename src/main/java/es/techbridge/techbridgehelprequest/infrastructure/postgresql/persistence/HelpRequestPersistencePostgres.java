@@ -2,7 +2,7 @@ package es.techbridge.techbridgehelprequest.infrastructure.postgresql.persistenc
 
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
-import es.techbridge.techbridgehelprequest.domain.persistence.HelpRequestPersistence;
+import es.techbridge.techbridgehelprequest.application.port.out.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
@@ -93,6 +93,11 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
                 .orElseThrow(() -> new NotFoundException("No Help request found with the ID: "+id));
         helpRequestEntity.setAiTutorialId(aiTutorialId);
         this.helpRequestRepository.save(helpRequestEntity);
+    }
+
+    @Override
+    public Long countVolunteerInProgressRequest(UUID id) {
+        return this.helpRequestRepository.countByVolunteerIdAndStatus(id,RequestStatus.IN_PROGRESS);
     }
 
 }
