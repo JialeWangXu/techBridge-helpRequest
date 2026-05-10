@@ -1,6 +1,7 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.application.port.in.HelpRequestUseCases;
+import es.techbridge.techbridgehelprequest.domain.exceptions.FailedCreateAiTutorialException;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
@@ -46,13 +47,19 @@ public class HelpRequestService implements HelpRequestUseCases {
         helpRequest.setSenior(senior);
         helpRequest.setId(UUID.randomUUID());
         HelpRequestEntity helpRequestEntity= this.helpRequestPersistence.create(helpRequest);
-        AiTutorialDto aiTutorial = this.aiTutorialWebClient.create(
-                CreateAiTutorialDto.builder()
-                        .title(helpRequest.getTitle())
-                        .description(helpRequest.getDescription())
-                        .helpRequestId(helpRequestEntity.getId())
-                        .build()
-        );
+        AiTutorialDto aiTutorial;
+        try{
+            aiTutorial = this.aiTutorialWebClient.create(
+                    CreateAiTutorialDto.builder()
+                            .title(helpRequest.getTitle())
+                            .description(helpRequest.getDescription())
+                            .helpRequestId(helpRequestEntity.getId())
+                            .build()
+            );
+        } catch (Exception e) {
+            this.helpRequestPersistence.deleteById(helpRequestEntity.getId());
+            throw new FailedCreateAiTutorialException("Please revise request content");
+        }
         this.helpRequestPersistence.saveAiTutorialId(helpRequestEntity.getId(),aiTutorial.getId());
         helpRequestEntity.setAiTutorialId(aiTutorial.getId());
         return helpRequestEntity.toHelpRequest();
@@ -129,6 +136,14 @@ public class HelpRequestService implements HelpRequestUseCases {
         updatedHelpRequest.setSenior(this.userWebClient.readById(updatedHelpRequest.getSenior().getId()));
         if (status == RequestStatus.IN_PROGRESS && updatedHelpRequest.getSupportSession() == null) {
             updatedHelpRequest.setSupportSession(helpRequest.getSupportSession());
+        }
+        if(updatedHelpRequest.getVolunteer().getId()!=null){
+            UserDto volunteer = this.userWebClient.readById(updatedHelpRequest.getVolunteer().getId());
+            updatedHelpRequest.setVolunteer(volunteer);
+        }
+        if(updatedHelpRequest.getAiTutorial().getId()!=null){
+            AiTutorialDto aiTutorialDto = this.aiTutorialWebClient.getById(updatedHelpRequest.getAiTutorial().getId());
+            updatedHelpRequest.setAiTutorial(aiTutorialDto);
         }
 
         return updatedHelpRequest;
