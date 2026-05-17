@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.services;
+package es.techbridge.techbridgehelprequest.application.services;
 
 import es.techbridge.techbridgehelprequest.application.port.in.HelpRequestUseCases;
 import es.techbridge.techbridgehelprequest.domain.exceptions.FailedCreateAiTutorialException;
@@ -6,16 +6,22 @@ import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
+import es.techbridge.techbridgehelprequest.domain.model.user.ContactPreference;
+import es.techbridge.techbridgehelprequest.domain.model.user.Province;
 import es.techbridge.techbridgehelprequest.domain.model.user.UserDto;
 import es.techbridge.techbridgehelprequest.application.port.out.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.application.port.out.webclients.AiTutorialWebClient;
 import es.techbridge.techbridgehelprequest.application.port.out.webclients.UserWebClient;
+import es.techbridge.techbridgehelprequest.domain.model.user.UserFiltersDto;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -66,15 +72,16 @@ public class HelpRequestService implements HelpRequestUseCases {
     }
 
     @Override
-    public List<HelpRequest> getSeniorHelpRequestsByEmail(String email){
+    public Page<HelpRequest> getSeniorFilteredHelpRequests(String email, RequestStatus status, String category, Pageable pageable){
 
         UserDto senior = this.userWebClient.readByEmail(email);
-
-        return this.helpRequestPersistence.getHelpRequestsBySeniorId(senior.getId())
-                .stream()
-                .map(HelpRequestEntity::toHelpRequest)
-                .peek(r -> r.setSenior(senior))
-                .toList();
+        return this.helpRequestPersistence
+                .getSeniorFilteredHelpRequests(senior.getId(), status, category, pageable)
+                .map(entity -> {
+                    HelpRequest request = entity.toHelpRequest();
+                    request.setSenior(senior);
+                    return request;
+                });
     }
 
     @Override
@@ -100,25 +107,38 @@ public class HelpRequestService implements HelpRequestUseCases {
     }
 
     @Override
-    public List<HelpRequest> getAllAvailableHelpRequests(){
-        return this.helpRequestPersistence.getAllAvailableHelpRequests()
-                .stream()
-                .map(HelpRequestEntity::toHelpRequest)
-                .peek(helpRequest ->
-                    helpRequest.setSenior(this.userWebClient.readById(helpRequest.getSenior().getId()))
-                )
-                .toList();
+    public Page<HelpRequest> getAllAvailableHelpRequests(Pageable pageable,
+                                                         ContactPreference contactPreference,
+                                                         Province province,
+                                                         String city,
+                                                         String search){
 
+        List<UUID> seniorIds = null;
+        if(contactPreference!=null || province!=null || (city!=null && !city.isEmpty())){
+            seniorIds = this.userWebClient
+                    .getFilteredUserIds(new UserFiltersDto(contactPreference,province,city));
+            if (seniorIds==null || seniorIds.isEmpty())return null;
+        }
+
+        if(search==null || search.isEmpty()) search=null;
+
+        return this.helpRequestPersistence.getAllAvailableHelpRequests(pageable,search,seniorIds)
+                .map(helpRequestEntity -> {
+                    UserDto senior = this.userWebClient.readById(helpRequestEntity.getSeniorId());
+                    HelpRequest helpRequest = helpRequestEntity.toHelpRequest();
+                    helpRequest.setSenior(senior);
+                    return helpRequest;
+                });
     }
 
     @Override
-    public HelpRequest updateRequestStatusById(String volunteerEmail, UUID id, RequestStatus status){
+    public HelpRequest updateRequestStatusById(String email, UUID id, RequestStatus status){
         HelpRequest helpRequest = this.helpRequestPersistence.getById(id).toHelpRequest();
         UUID volunteerId = null;
 
         // si el voluntario acceptado la peticion, se crea un sessionSupport
         if(status == RequestStatus.IN_PROGRESS){
-            UserDto volunteer = this.userWebClient.readByEmail(volunteerEmail);
+            UserDto volunteer = this.userWebClient.readByEmail(email);
             volunteerId = volunteer.getId();
             helpRequest.setVolunteer(volunteer);
             SupportSession supportSession = SupportSession.builder()
@@ -137,11 +157,11 @@ public class HelpRequestService implements HelpRequestUseCases {
         if (status == RequestStatus.IN_PROGRESS && updatedHelpRequest.getSupportSession() == null) {
             updatedHelpRequest.setSupportSession(helpRequest.getSupportSession());
         }
-        if(updatedHelpRequest.getVolunteer().getId()!=null){
+        if(updatedHelpRequest.getVolunteer()!=null){
             UserDto volunteer = this.userWebClient.readById(updatedHelpRequest.getVolunteer().getId());
             updatedHelpRequest.setVolunteer(volunteer);
         }
-        if(updatedHelpRequest.getAiTutorial().getId()!=null){
+        if(updatedHelpRequest.getAiTutorial()!=null){
             AiTutorialDto aiTutorialDto = this.aiTutorialWebClient.getById(updatedHelpRequest.getAiTutorial().getId());
             updatedHelpRequest.setAiTutorial(aiTutorialDto);
         }
@@ -150,16 +170,15 @@ public class HelpRequestService implements HelpRequestUseCases {
     }
 
     @Override
-    public List<HelpRequest> getVolunteerHelpRequestsByEmail(String email){
+    public Page<HelpRequest> getVolunteerFilteredHelpRequestsByEmail(String email,HelpStatus status, Pageable pageable){
         UserDto volunteer = this.userWebClient.readByEmail(email);
-        return this.helpRequestPersistence.getHelpRequestsByVolunteerId(volunteer.getId())
-                .stream()
-                .map(HelpRequestEntity::toHelpRequest)
-                .peek(helpRequest -> {
-                    UserDto senior = this.userWebClient.readById(helpRequest.getSenior().getId());
+        return this.helpRequestPersistence.getVolunteerFilteredHelpRequests(volunteer.getId(),status,pageable)
+                .map(helpRequestEntity -> {
+                    UserDto senior = this.userWebClient.readById(helpRequestEntity.getSeniorId());
+                    HelpRequest helpRequest = helpRequestEntity.toHelpRequest();
                     helpRequest.setSenior(senior);
-                })
-                .toList();
+                    return helpRequest;
+                });
     }
 
     @Override

@@ -32,6 +32,8 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,8 +88,10 @@ class HelpRequestResourceIT {
                 .role(UserRole.VOLUNTEER)
                 .build();
 
-        BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
+        BDDMockito.given(this.userWebClient.readByEmail(SENIOR_EMAIL))
                 .willReturn(senior);
+        BDDMockito.given(this.userWebClient.readByEmail(VOLUNTEER_EMAIL))
+                .willReturn(volunteer);
         BDDMockito.given(this.userWebClient.readById(any(UUID.class)))
                 .willAnswer(invocation -> {
                     UUID id = invocation.getArgument(0);
@@ -160,12 +164,16 @@ class HelpRequestResourceIT {
     @Test
     void whenGetSeniorHelpRequestsByEmail_thenReturnResult() throws Exception {
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.SENIOR_MY)
+                        .param("status", "FINDING_VOLUNTEER")
+                        .param("category", "ALL")
+                        .param("page", "0")
+                        .param("size", "30")
                         .with(jwt().jwt(jwt -> jwt.subject(SENIOR_EMAIL))
                                 .authorities(() -> "ROLE_SENIOR"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3))
-                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+                .andExpect(jsonPath("$.content.length()").value(7))
+                .andExpect(jsonPath("$.content[0].senior.email").value(SENIOR_EMAIL));
     }
 
     @Test
@@ -180,12 +188,15 @@ class HelpRequestResourceIT {
                         .build());
 
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.VOLUNTEER_MY)
+                        .param("status", "ACTIVE")
+                        .param("page", "0")
+                        .param("size", "30")
                         .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
                                 .authorities(() -> "ROLE_VOLUNTEER"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+                .andExpect(jsonPath("$.content.length()").value(6))
+                .andExpect(jsonPath("$.content[0].senior.email").value(SENIOR_EMAIL));
     }
 
     @Test
@@ -225,14 +236,15 @@ class HelpRequestResourceIT {
     @Test
     void whenGetAllAvailableHelpRequest() throws Exception {
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.AVAILABLE)
+                        .param("page", "0")
+                        .param("size", "30")
                         .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
                                 .authorities(() -> "ROLE_VOLUNTEER"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()))
-                .andExpect(jsonPath("$[0].status").value("FINDING_VOLUNTEER"))
-                .andExpect(jsonPath("$[0].senior.email").value(SENIOR_EMAIL));
+                .andExpect(jsonPath("$.content.length()").value(7))
+                .andExpect(jsonPath("$.content[0].status").value("FINDING_VOLUNTEER"))
+                .andExpect(jsonPath("$.content[0].senior.email").value(SENIOR_EMAIL));
     }
 
     @Test
@@ -248,12 +260,15 @@ class HelpRequestResourceIT {
                 .build());
 
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS + HelpRequestResource.AVAILABLE)
+                        .param("page", "0")
+                        .param("size", "30")
                         .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
                                 .authorities(() -> "ROLE_VOLUNTEER"))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(REQUEST_ID_FINDING_VOLUNTEER.toString()));
+                .andExpect(jsonPath("$.content.length()").value(7))
+                .andExpect(jsonPath("$.content[*].id").value(hasItem(REQUEST_ID_FINDING_VOLUNTEER.toString())))
+                .andExpect(jsonPath("$.content[*].id").value(not(hasItem("11111111-2222-3333-4444-555566660099"))));
     }
 
     @Test
@@ -357,7 +372,8 @@ class HelpRequestResourceIT {
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.VOLUNTEER_CHECK)
                 .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
                         .authorities(() -> "ROLE_VOLUNTEER"))
-        ).andExpect(status().isOk());
+        ).andExpect(status().isOk())
+                .andExpect(content().string("true"));
     }
 
     @Test
@@ -365,6 +381,7 @@ class HelpRequestResourceIT {
         this.mockMvc.perform(get(HelpRequestResource.HELPREQUESTS+HelpRequestResource.VOLUNTEER_IN_PROGRESS_COUNT)
                 .with(jwt().jwt(jwt -> jwt.subject(VOLUNTEER_EMAIL))
                         .authorities(() -> "ROLE_VOLUNTEER"))
-        ).andExpect(status().isOk());
+        ).andExpect(status().isOk())
+                .andExpect(content().string("6"));
     }
 }

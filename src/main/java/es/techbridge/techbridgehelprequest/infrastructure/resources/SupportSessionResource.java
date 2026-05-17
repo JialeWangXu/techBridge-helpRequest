@@ -1,11 +1,9 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
-import es.techbridge.techbridgehelprequest.domain.services.SupportSessionService;
+import es.techbridge.techbridgehelprequest.application.services.SupportSessionService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

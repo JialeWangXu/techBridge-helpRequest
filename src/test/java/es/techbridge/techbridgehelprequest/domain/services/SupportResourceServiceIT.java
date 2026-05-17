@@ -1,6 +1,7 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
 import es.techbridge.techbridgehelprequest.application.port.out.resourceFacade.ResourceFacade;
+import es.techbridge.techbridgehelprequest.application.services.SupportResourceService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
