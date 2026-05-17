@@ -4,9 +4,13 @@ import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.application.port.out.persistence.HelpRequestPersistence;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpRequestEntity;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.HelpRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.UUID;
 public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
 
     private final HelpRequestRepository helpRequestRepository;
+    private static final String SENIOR = "senior";
 
     @Autowired
     public HelpRequestPersistencePostgres(HelpRequestRepository helpRequestRepository) {
@@ -31,8 +36,14 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     }
 
     @Override
-    public List<HelpRequestEntity> getHelpRequestsBySeniorId(UUID seniorId) {
-        return this.helpRequestRepository.findBySeniorId(seniorId);
+    public Page<HelpRequestEntity> getSeniorFilteredHelpRequests(UUID seniorId, RequestStatus status, String category, Pageable pageable) {
+        if(category.equals("VOLUNTEER")){
+            return this.helpRequestRepository.findAllBySeniorIdAndStatusAndVolunteerIdIsNotNull(seniorId,status,pageable);
+        }else if (category.equals("AI_ONLY")){
+            return this.helpRequestRepository.findAllBySeniorIdAndStatusAndVolunteerIdIsNull(seniorId, status, pageable);
+        }else{
+            return this.helpRequestRepository.findAllBySeniorIdAndStatus(seniorId, status, pageable);
+        }
     }
 
     @Override
@@ -51,14 +62,28 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     }
 
     @Override
-    public List<HelpRequestEntity> getAllAvailableHelpRequests() {
-        // Requests generado con tutorial y solicitada ayuda de voluntario
-        List<HelpRequestEntity> availableHelpRequests =
-                this.helpRequestRepository.findAllByStatus(RequestStatus.FINDING_VOLUNTEER);
-        return availableHelpRequests.stream()
-                .filter(helpRequestEntity -> helpRequestEntity.getAiTutorialId()!=null
-                        &&helpRequestEntity.getVolunteerId()==null)
-                .toList();
+    public Page<HelpRequestEntity> getAllAvailableHelpRequests(Pageable pageable,
+                                                               String searchText,
+                                                               List<UUID> seniors) {
+        String search = (searchText != null && !searchText.trim().isEmpty()) ? searchText.trim().toLowerCase(): null;
+        List<UUID> seniorIds = (seniors != null && !seniors.isEmpty()) ? seniors : null;
+        if (search == null && seniorIds == null) {
+            return this.helpRequestRepository.findAllByStatusAndVolunteerIdIsNullAndAiTutorialIdIsNotNull(
+                    RequestStatus.FINDING_VOLUNTEER,
+                    pageable
+            );
+        }
+        if (search == null) {
+            return this.helpRequestRepository.findAllByStatusAndVolunteerIdIsNullAndAiTutorialIdIsNotNullAndSeniorIdIsIn(
+                    RequestStatus.FINDING_VOLUNTEER,
+                    seniorIds,
+                    pageable
+            );
+        }
+        if (seniorIds == null) {
+            return this.helpRequestRepository.findAvailableRequestsWithFilters(search, pageable);
+        }
+        return this.helpRequestRepository.findAvailableRequestsWithFiltersBySeniorIds(search,seniorIds,pageable);
     }
 
     @Override
@@ -83,8 +108,9 @@ public class HelpRequestPersistencePostgres implements HelpRequestPersistence {
     }
 
     @Override
-    public List<HelpRequestEntity> getHelpRequestsByVolunteerId(UUID volunteerId) {
-        return this.helpRequestRepository.findAllByVolunteerId(volunteerId);
+    public Page<HelpRequestEntity> getVolunteerFilteredHelpRequests(UUID volunteerId, HelpStatus status, Pageable pageable) {
+        return this.helpRequestRepository
+                .findAllByVolunteerIdAndSupportSession_Status(volunteerId,status,pageable);
     }
 
     @Override

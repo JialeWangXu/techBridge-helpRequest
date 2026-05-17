@@ -1,12 +1,13 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resource;
 
-import es.techbridge.techbridgehelprequest.domain.services.SupportResourceService;
+import es.techbridge.techbridgehelprequest.application.services.SupportResourceService;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SessionMethods;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.SupportSessionEntity;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.repositories.SupportSessionRepository;
 import es.techbridge.techbridgehelprequest.infrastructure.resources.SupportSessionResource;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
+import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -19,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -127,7 +130,6 @@ class SupportSessionResourceIT {
 
     @Test
     void whenVolunteerUploadsFile_thenReturns200() throws Exception {
-        // Creamos un archivo simulado
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "test.pdf",
@@ -135,15 +137,18 @@ class SupportSessionResourceIT {
                 "contenido".getBytes()
         );
 
-        // Simulamos el ID de la sesión
-        UUID sessionId = UUID.randomUUID();
+        BDDMockito.given(this.supportResourceService.uploadSupportSessionResource(anyString(), any()))
+                .willReturn("https://s3.aws.com/techbridge/test.pdf");
 
-        // MockMvc para Multipart
-        this.mockMvc.perform(multipart(SupportSessionResource.SUPPORTSESSION + "/" + sessionId)
+        this.mockMvc.perform(multipart(SupportSessionResource.SUPPORTSESSION + SupportSessionResource.ID, SUPPORT_SESSION_ID_IN_PROGRESS)
                         .file(file)
-                        .with(jwt().authorities(() -> "ROLE_VOLUNTEER"))) // Tiene el rol correcto
+                        .with(jwt().authorities(() -> "ROLE_VOLUNTEER")))
                 .andExpect(status().isOk());
 
+        assertThat(this.supportSessionRepository.findById(SUPPORT_SESSION_ID_IN_PROGRESS))
+                .get()
+                .extracting(SupportSessionEntity::getS3RecordingUrl)
+                .isEqualTo("https://s3.aws.com/techbridge/test.pdf");
     }
 
     @Test

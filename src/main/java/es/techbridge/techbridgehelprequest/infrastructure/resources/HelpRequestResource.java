@@ -2,16 +2,22 @@ package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.RequestStatusDto;
-import es.techbridge.techbridgehelprequest.domain.services.HelpRequestService;
+import es.techbridge.techbridgehelprequest.application.services.HelpRequestService;
+import es.techbridge.techbridgehelprequest.domain.model.user.ContactPreference;
+import es.techbridge.techbridgehelprequest.domain.model.user.Province;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
+import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.RequestStatus;
 import jakarta.validation.Valid;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,9 +49,12 @@ public class HelpRequestResource {
 
     @GetMapping(SENIOR_MY)
     @PreAuthorize("hasAnyRole('SENIOR')")
-    public List<HelpRequest> getHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
+    public Page<HelpRequest> getSeniorFilteredHelpRequests(@AuthenticationPrincipal Jwt jwt,
+                                                           @RequestParam RequestStatus status,
+                                                           @RequestParam String category,
+                                                           @PageableDefault(page = 1, size = 3) Pageable pageable){
         String email = jwt.getSubject();
-        return this.helpRequestService.getSeniorHelpRequestsByEmail(email);
+        return this.helpRequestService.getSeniorFilteredHelpRequests(email,status,category,pageable);
     }
 
     @GetMapping(ID)
@@ -62,8 +71,14 @@ public class HelpRequestResource {
 
     @GetMapping(AVAILABLE)
     @PreAuthorize("hasAnyRole('VOLUNTEER')")
-    public List<HelpRequest> getAllAvailableHelpRequests(){
-        return this.helpRequestService.getAllAvailableHelpRequests();
+    public Page<HelpRequest> getAllAvailableHelpRequests(@PageableDefault(page = 1, size = 3)
+                                                             Pageable pageable,
+                                                         @RequestParam(required = false)ContactPreference contactPreference,
+                                                         @RequestParam(required = false)Province province,
+                                                         @RequestParam(required = false)String city,
+                                                         @RequestParam(required = false) String search
+                                                         ){
+        return this.helpRequestService.getAllAvailableHelpRequests(pageable,contactPreference,province,city,search);
     }
 
     @PutMapping(ID)
@@ -75,9 +90,12 @@ public class HelpRequestResource {
 
     @GetMapping(VOLUNTEER_MY)
     @PreAuthorize("hasAnyRole('VOLUNTEER')")
-    public List<HelpRequest> getAllVolunteersHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt){
+    public Page<HelpRequest> getAllVolunteersHelpRequestsByEmail(@AuthenticationPrincipal Jwt jwt,
+                                                                 @RequestParam HelpStatus status,
+                                                                 @PageableDefault(page = 1, size = 3)
+                                                                     Pageable pageable){
         String email = jwt.getSubject();
-        return this.helpRequestService.getVolunteerHelpRequestsByEmail(email);
+        return this.helpRequestService.getVolunteerFilteredHelpRequestsByEmail(email,status,pageable);
     }
 
     @PutMapping(SAVE_AI_TUTORIAL_ID)

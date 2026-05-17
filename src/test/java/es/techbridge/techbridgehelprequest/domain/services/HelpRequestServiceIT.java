@@ -1,5 +1,6 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
+import es.techbridge.techbridgehelprequest.application.services.HelpRequestService;
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
@@ -120,42 +123,54 @@ class HelpRequestServiceIT {
                 .findFirst()
                 .orElseThrow();
 
-        assertThat(helpRequestEntities).hasSize(4);
+        assertThat(helpRequestEntities).hasSize(28);
         assertThat(result.getDescription()).isEqualTo("Testing1");
         assertThat(result.getStatus()).isEqualTo(RequestStatus.OPEN);
         assertThat(result.getSeniorId()).isEqualTo(SENIOR_ID);
     }
 
     @Test
-    void getSeniorHelpRequestsByEmail() {
-        List<HelpRequest> result = this.helpRequestService.getSeniorHelpRequestsByEmail(SENIOR_EMAIL);
+    void getSeniorFilteredHelpRequests() {
+        Page<HelpRequest> result = this.helpRequestService.getSeniorFilteredHelpRequests(
+                SENIOR_EMAIL,
+                RequestStatus.FINDING_VOLUNTEER,
+                "ALL",
+                PageRequest.of(0, 30)
+        );
 
-        assertThat(result).isNotNull().hasSize(3)
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(7)
                 .extracting(HelpRequest::getId)
-                .containsExactlyInAnyOrder(
+                .contains(
                         REQUEST_ID_FINDING_VOLUNTEER,
-                        REQUEST_ID_IN_PROGRESS,
-                        UUID.fromString("11111111-2222-3333-4444-555566660003")
+                        UUID.fromString("11111111-2222-3333-4444-555566660010"),
+                        UUID.fromString("11111111-2222-3333-4444-555566660015")
                 );
-        assertThat(result)
+        assertThat(result.getContent())
                 .extracting(helpRequest -> helpRequest.getSenior().getEmail())
                 .containsOnly(SENIOR_EMAIL);
     }
 
     @Test
-    void getVolunteerHelpRequestsByEmail() {
+    void getVolunteerFilteredHelpRequestsByEmail() {
         BDDMockito.given(this.userWebClient.readByEmail(any(String.class)))
                 .willReturn(this.volunteer);
 
-        List<HelpRequest> result = this.helpRequestService.getVolunteerHelpRequestsByEmail(VOLUNTEER_EMAIL);
+        Page<HelpRequest> result = this.helpRequestService.getVolunteerFilteredHelpRequestsByEmail(
+                VOLUNTEER_EMAIL,
+                HelpStatus.ACTIVE,
+                PageRequest.of(0, 30)
+        );
 
-        assertThat(result).isNotNull().hasSize(2)
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(6)
                 .extracting(HelpRequest::getId)
-                .containsExactlyInAnyOrder(
+                .contains(
                         REQUEST_ID_IN_PROGRESS,
-                        UUID.fromString("11111111-2222-3333-4444-555566660003")
+                        UUID.fromString("11111111-2222-3333-4444-555566660021"),
+                        UUID.fromString("11111111-2222-3333-4444-555566660025")
                 );
-        assertThat(result)
+        assertThat(result.getContent())
                 .extracting(helpRequest -> helpRequest.getSenior().getEmail())
                 .containsOnly(SENIOR_EMAIL);
     }
@@ -219,12 +234,24 @@ class HelpRequestServiceIT {
 
     @Test
     void getAllAvailableRequests() {
-        List<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests();
+        Page<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests(
+                PageRequest.of(0, 30),
+                null,
+                null,
+                null,
+                null
+        );
 
-        assertThat(result).hasSize(1);
-        assertThat(result.getFirst().getId()).isEqualTo(REQUEST_ID_FINDING_VOLUNTEER);
-        assertThat(result.getFirst().getStatus()).isEqualTo(RequestStatus.FINDING_VOLUNTEER);
-        assertThat(result.getFirst().getSenior().getEmail()).isEqualTo(SENIOR_EMAIL);
+        assertThat(result.getContent()).hasSize(7);
+        assertThat(result.getContent())
+                .extracting(HelpRequest::getId)
+                .contains(REQUEST_ID_FINDING_VOLUNTEER);
+        assertThat(result.getContent())
+                .extracting(HelpRequest::getStatus)
+                .containsOnly(RequestStatus.FINDING_VOLUNTEER);
+        assertThat(result.getContent())
+                .extracting(helpRequest -> helpRequest.getSenior().getEmail())
+                .containsOnly(SENIOR_EMAIL);
     }
 
     @Test
@@ -239,12 +266,19 @@ class HelpRequestServiceIT {
                 .volunteerId(VOLUNTEER_ID)
                 .build());
 
-        List<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests();
+        Page<HelpRequest> result = this.helpRequestService.getAllAvailableHelpRequests(
+                PageRequest.of(0, 30),
+                null,
+                null,
+                null,
+                null
+        );
 
-        assertThat(result).hasSize(1);
-        assertThat(result)
+        assertThat(result.getContent()).hasSize(7);
+        assertThat(result.getContent())
                 .extracting(HelpRequest::getId)
-                .containsExactly(REQUEST_ID_FINDING_VOLUNTEER);
+                .contains(REQUEST_ID_FINDING_VOLUNTEER)
+                .doesNotContain(UUID.fromString("11111111-2222-3333-4444-555566660099"));
     }
 
     @Test
@@ -343,12 +377,12 @@ class HelpRequestServiceIT {
     @Test
     void checkVolunteerCurrentProgress(){
         assertThat(this.helpRequestService.checkVolunteerCurrentProgress(VOLUNTEER_EMAIL))
-                .isFalse();
+                .isTrue();
     }
 
     @Test
     void getVolunteerCurrentProgress(){
         assertThat(this.helpRequestService.getVolunteerCurrentProgress(VOLUNTEER_EMAIL))
-                .isEqualTo(1);
+                .isEqualTo(6);
     }
 }

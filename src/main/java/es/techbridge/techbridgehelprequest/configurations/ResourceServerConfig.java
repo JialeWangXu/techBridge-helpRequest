@@ -3,6 +3,7 @@ package es.techbridge.techbridgehelprequest.configurations;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.data.web.config.PageableHandlerMethodArgumentResolverCustomizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -62,6 +63,14 @@ public class ResourceServerConfig {  // validate tokens y security APIs con SCOP
                     .collect(Collectors.toList());
         });
         return jwtAuthenticationConverter;
+    }
+
+    @Bean
+    public PageableHandlerMethodArgumentResolverCustomizer customize() {
+        return resolver -> {
+            resolver.setOneIndexedParameters(true);
+            resolver.setMaxPageSize(50);
+        };
     }
 
 }

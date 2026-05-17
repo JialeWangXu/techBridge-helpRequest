@@ -1,5 +1,7 @@
 package es.techbridge.techbridgehelprequest.domain.services;
 
+import es.techbridge.techbridgehelprequest.application.services.SupportResourceService;
+import es.techbridge.techbridgehelprequest.application.services.SupportSessionService;
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;

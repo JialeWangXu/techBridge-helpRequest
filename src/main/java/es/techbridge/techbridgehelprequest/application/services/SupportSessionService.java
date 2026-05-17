@@ -1,4 +1,4 @@
-package es.techbridge.techbridgehelprequest.domain.services;
+package es.techbridge.techbridgehelprequest.application.services;
 
 import es.techbridge.techbridgehelprequest.application.port.in.SupportSessionUseCases;
 import es.techbridge.techbridgehelprequest.domain.exceptions.FailUploadResourceException;
