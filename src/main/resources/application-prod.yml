@@ -8,10 +8,22 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWK_SET_URI}
+      client:
+        provider:
+          internal-provider:
+            token-uri: ${TOKEN_URI}
 aws:
   s3:
     bucket-name: techbridge-s3
     region: eu-west-1
+    credentials:
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
 
 eureka:
   client:
