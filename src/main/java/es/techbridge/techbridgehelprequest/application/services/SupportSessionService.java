@@ -1,5 +1,6 @@
 package es.techbridge.techbridgehelprequest.application.services;
 
+import es.techbridge.techbridgehelprequest.application.port.in.SupportResourceUseCases;
 import es.techbridge.techbridgehelprequest.application.port.in.SupportSessionUseCases;
 import es.techbridge.techbridgehelprequest.domain.exceptions.FailUploadResourceException;
 import es.techbridge.techbridgehelprequest.domain.exceptions.NotFoundException;
@@ -17,10 +18,10 @@ import java.util.UUID;
 public class SupportSessionService implements SupportSessionUseCases {
 
     private final SupportSessionPersistence supportSessionPersistence;
-    private final SupportResourceService supportResourceService;
+    private final SupportResourceUseCases supportResourceService;
 
     @Autowired
-    public SupportSessionService(SupportSessionPersistence supportSessionPersistence, SupportResourceService supportResourceService) {
+    public SupportSessionService(SupportSessionPersistence supportSessionPersistence, SupportResourceUseCases supportResourceService) {
         this.supportSessionPersistence = supportSessionPersistence;
         this.supportResourceService = supportResourceService;
     }
