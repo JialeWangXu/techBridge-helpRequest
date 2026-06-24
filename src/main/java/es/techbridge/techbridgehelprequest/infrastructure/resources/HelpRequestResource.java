@@ -1,8 +1,8 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
+import es.techbridge.techbridgehelprequest.application.port.in.HelpRequestUseCases;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.HelpRequest;
 import es.techbridge.techbridgehelprequest.domain.model.helprequest.RequestStatusDto;
-import es.techbridge.techbridgehelprequest.application.services.HelpRequestService;
 import es.techbridge.techbridgehelprequest.domain.model.user.ContactPreference;
 import es.techbridge.techbridgehelprequest.domain.model.user.Province;
 import es.techbridge.techbridgehelprequest.infrastructure.postgresql.entities.HelpStatus;
@@ -33,10 +33,10 @@ public class HelpRequestResource {
     public static final String SAVE_AI_TUTORIAL_ID = "/saveAiTutorial/{id}";
     public static final String VOLUNTEER_CHECK="/inProgress/check";
     public static final String VOLUNTEER_IN_PROGRESS_COUNT="/inProgress/count";
-    private final HelpRequestService helpRequestService;
+    private final HelpRequestUseCases helpRequestService;
 
     @Autowired
-    public HelpRequestResource(HelpRequestService helpRequestService) {
+    public HelpRequestResource(HelpRequestUseCases helpRequestService) {
         this.helpRequestService = helpRequestService;
     }
 

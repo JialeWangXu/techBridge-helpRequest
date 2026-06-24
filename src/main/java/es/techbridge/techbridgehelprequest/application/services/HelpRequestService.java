@@ -1,6 +1,7 @@
 package es.techbridge.techbridgehelprequest.application.services;
 
 import es.techbridge.techbridgehelprequest.application.port.in.HelpRequestUseCases;
+import es.techbridge.techbridgehelprequest.application.port.in.SupportSessionUseCases;
 import es.techbridge.techbridgehelprequest.domain.exceptions.FailedCreateAiTutorialException;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.AiTutorialDto;
 import es.techbridge.techbridgehelprequest.domain.model.aitutorial.CreateAiTutorialDto;
@@ -31,7 +32,7 @@ public class HelpRequestService implements HelpRequestUseCases {
 
     private final HelpRequestPersistence helpRequestPersistence;
     private final UserWebClient userWebClient;
-    private final SupportSessionService supportSessionService;
+    private final SupportSessionUseCases supportSessionService;
     private final AiTutorialWebClient aiTutorialWebClient;
 
     @Value("${app.request-limit.volunteer-in-progress-limit}")
@@ -39,7 +40,7 @@ public class HelpRequestService implements HelpRequestUseCases {
 
     @Autowired
     public HelpRequestService(HelpRequestPersistence helpRequestPersistence,
-                              UserWebClient userWebClient, SupportSessionService supportSessionService, AiTutorialWebClient aiTutorialWebClient) {
+                              UserWebClient userWebClient, SupportSessionUseCases supportSessionService, AiTutorialWebClient aiTutorialWebClient) {
         this.helpRequestPersistence = helpRequestPersistence;
         this.userWebClient = userWebClient;
         this.supportSessionService = supportSessionService;

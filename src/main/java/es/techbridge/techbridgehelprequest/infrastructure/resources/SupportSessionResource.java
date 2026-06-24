@@ -1,7 +1,7 @@
 package es.techbridge.techbridgehelprequest.infrastructure.resources;
 
+import es.techbridge.techbridgehelprequest.application.port.in.SupportSessionUseCases;
 import es.techbridge.techbridgehelprequest.domain.model.supportsession.SupportSession;
-import es.techbridge.techbridgehelprequest.application.services.SupportSessionService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,10 +19,10 @@ public class SupportSessionResource {
     public static final String SUPPORTSESSION = "/supportsession";
     public static final String ID = "/{id}";
 
-    private final SupportSessionService supportSessionService;
+    private final SupportSessionUseCases supportSessionService;
 
     @Autowired
-    public SupportSessionResource(SupportSessionService supportSessionService) {
+    public SupportSessionResource(SupportSessionUseCases supportSessionService) {
         this.supportSessionService = supportSessionService;
     }
 
